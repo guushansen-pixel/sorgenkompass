@@ -52,7 +52,7 @@ Kalibrierung (geschätzt vs. eingetreten), Verlauf, Auswertung, Sicherung,
 optionaler Export, Diktat an jedem Textfeld, Vorlesen, Fahrmodus.
 Selbsttest 26/26, Fahrmodus-Durchläufe (Sorgen-Formel, Kontrollkreis) mit
 simulierten Antworten grün. Release-APK gebaut und am 2026-11-25 auf den Pixel installiert, **am
-Gerät nichts getestet**, kein GitHub-Repo.
+Gerät nichts getestet**. Gepusht nach GitHub (guushansen-pixel/sorgenkompass).
 
 Offen: ob die Spracheingabe des Pixel (Google-Dialog) im Fahrmodus flüssig
 genug ist, ob sie Pausen beim Nachdenken toleriert (die Stille-Extras
