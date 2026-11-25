@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher-Icon fuer den Sorgenkompass: ein Kompassring mit Nadel. Die
+     helle Nadelspitze zeigt nach oben rechts ("nach vorn"), die dunkle Haelfte
+     zeigt zurueck. 108x108, Motiv innerhalb von Radius 31 um die Mitte
+     (54,54), damit die runde Launcher-Maske nichts abschneidet.
+     Hintergrundfarbe kommt per -IconBackground. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Ring: Aussenkreis r=28 minus Innenkreis r=23 -->
+    <path android:fillColor="#7FA7E8"
+        android:fillType="evenOdd"
+        android:pathData="M26,54 a28,28 0 1 0 56,0 a28,28 0 1 0 -56,0 z M31,54 a23,23 0 1 0 46,0 a23,23 0 1 0 -46,0 z" />
+    <!-- Nadel nach vorn (hell) -->
+    <path android:fillColor="#E8EDF2"
+        android:pathData="M69,39 L57.5,57.5 L50.5,50.5 z" />
+    <!-- Nadel zurueck (gedeckt) -->
+    <path android:fillColor="#3FB6A8"
+        android:pathData="M39,69 L50.5,50.5 L57.5,57.5 z" />
+    <!-- Mitte -->
+    <path android:fillColor="#12171E"
+        android:pathData="M51,54 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 z" />
+</vector>

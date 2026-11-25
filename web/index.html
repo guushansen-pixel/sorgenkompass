@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Sorgenkompass</title>
+<style>
+:root {
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  --bg: #12171E; --card: #1B222C; --line: #2A3441; --txt: #E8EDF2; --muted: #93A0AF;
+  --acc: #7FA7E8; --acc2: #3FB6A8; --good: #4CC38A; --bad: #E5674F; --warn: #E0A93B;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--txt);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+#app { max-width: 560px; margin: 0 auto; padding: calc(var(--sat) + 8px) 14px calc(var(--sab) + 28px); }
+header { display: flex; align-items: center; gap: 8px; height: 48px; }
+header h1 { font-size: 20px; margin: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#back { background: none; border: 0; color: var(--txt); font-size: 30px; line-height: 1; padding: 0 12px 4px 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 10px 0; }
+.card h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.card.hi { border-color: var(--warn); } .card.acc { border-color: var(--acc); }
+.muted { color: var(--muted); } .small { font-size: 13px; } .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+.big { font-size: 26px; font-weight: 700; }
+.intro { color: #C5CFDA; font-size: 15px; margin: 4px 0 6px; }
+button { font: inherit; color: var(--txt); background: #26303D; border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; }
+button.primary { background: var(--acc); border-color: var(--acc); color: #0B1626; font-weight: 700; }
+button.block { display: block; width: 100%; margin-top: 8px; }
+button.ghost { background: none; } button.danger { color: var(--bad); }
+button.small { font-size: 13px; padding: 6px 10px; }
+button.go { display: block; width: 100%; text-align: left; margin-top: 8px; padding: 12px 14px; }
+button.go b { display: block; font-size: 16px; } button.go span { display: block; font-size: 13px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 14px; padding: 8px 11px; }
+.chip.on { background: var(--acc); border-color: var(--acc); color: #0B1626; font-weight: 600; }
+.row { display: flex; gap: 8px; align-items: center; } .row > .grow { flex: 1; min-width: 0; }
+.item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.item:first-of-type { border-top: 0; } .item > .grow { flex: 1; min-width: 0; }
+.item.tap { cursor: pointer; }
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 8px; background: #26303D; color: var(--muted); white-space: nowrap; }
+.tag.good { color: var(--good); } .tag.warn { color: var(--warn); } .tag.bad { color: var(--bad); }
+label.f { display: block; margin: 12px 0 4px; font-size: 14px; color: var(--muted); }
+label.f b { color: var(--txt); }
+label.c { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+label.c input { width: 22px; height: 22px; flex: 0 0 auto; }
+input[type=text], input[type=date], input[type=time], textarea { font: inherit; color: var(--txt); background: #0E1319; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; width: 100%; }
+input[type=date], input[type=time] { color-scheme: dark; }
+textarea { min-height: 70px; resize: vertical; }
+input[type=range] { width: 100%; accent-color: var(--acc); height: 30px; }
+.sub { border: 1px solid var(--line); border-radius: 12px; padding: 4px 10px 10px; margin-top: 10px; background: #161C24; }
+.sub .head { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 13px; color: var(--muted); }
+.steps { display: flex; gap: 4px; margin: 2px 0 8px; } .steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); } .steps i.on { background: var(--acc); }
+.nav { display: flex; gap: 8px; margin-top: 16px; } .nav button { flex: 1; }
+.kv { margin: 10px 0 0; } .kv .k { font-size: 13px; color: var(--muted); } .kv .v { white-space: pre-wrap; word-wrap: break-word; }
+.meter { height: 8px; background: #0E1319; border-radius: 4px; overflow: hidden; margin: 6px 0; display: flex; }
+.meter i { display: block; height: 100%; }
+textarea.mono { height: 140px; font: 12px/1.4 monospace; }
+#modal { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; }
+#modal[hidden] { display: none; }
+#modal > div { background: var(--card); width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 16px 16px calc(var(--sab) + 16px); }
+#modal h3 { margin: 0 0 6px; }
+.btns { display: flex; gap: 8px; margin-top: 12px; } .btns button { flex: 1; }
+.foot { margin-top: 18px; font-size: 12px; color: var(--muted); text-align: center; }
+.fw { display: flex; gap: 6px; align-items: flex-start; } .fw > :first-child { flex: 1; min-width: 0; }
+button.mic { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; font-size: 20px; }
+.vbar { display: flex; gap: 8px; margin: 6px 0 4px; } .vbar button { flex: 1; font-size: 14px; padding: 8px; }
+/* Fahrmodus: grosse Schrift, zwei grosse Knoepfe, sonst nichts */
+#drive { position: fixed; inset: 0; z-index: 15; background: #0B0F14; display: flex; flex-direction: column;
+  padding: calc(var(--sat) + 14px) 18px calc(var(--sab) + 18px); }
+#drive[hidden] { display: none; }
+#d-step { color: var(--muted); font-size: 15px; }
+#d-q { flex: 1; display: flex; align-items: center; font-size: 27px; line-height: 1.3; font-weight: 600; overflow: hidden; }
+#d-state { font-size: 18px; color: var(--acc); min-height: 28px; }
+#d-last { font-size: 15px; color: var(--muted); min-height: 44px; max-height: 88px; overflow: hidden; margin: 6px 0 12px; }
+#d-btns { display: flex; gap: 10px; } #d-btns button { flex: 1; height: 84px; font-size: 20px; font-weight: 700; border-radius: 16px; }
+#d-stop { background: #3A1D1A; border-color: var(--bad); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><button id="back" aria-label="Zurück">‹</button><h1 id="title">Sorgenkompass</h1></header>
+  <main id="view"></main>
+</div>
+<div id="drive" hidden>
+  <div id="d-step"></div><div id="d-q"></div><div id="d-state"></div><div id="d-last"></div>
+  <div id="d-btns"><button id="d-skip">Überspringen</button><button id="d-stop">Stopp</button></div>
+</div>
+<div id="modal" hidden><div id="modal-in"></div></div>
+
+<script>
+'use strict';
+// =====================================================================
+// Sorgenkompass: Stress- und Sorgen-Uebungen nach Tim Ferriss (Fear Setting),
+// Dale Carnegie (Sorgen-Formel nach Willis Carrier, Stop-Loss, Tagesabschnitte),
+// Stoa (Kontrollkreis) und KVT (Gedankenprotokoll), dazu Sorgenzeit und ein
+// Rueckblick, der zaehlt, wie oft Befuerchtungen wirklich eintreten.
+// Alle Texte selbst geschrieben, keine Buchzitate. Details in README.md.
+// Aufbau: Daten -> Uebungen (TYPES) -> reine Funktionen -> Formular-Motor
+//         -> Ansichten -> Dialoge -> Selbsttest (skTests, ?debug=1).
+// =====================================================================
+const $ = id => document.getElementById(id);
+const VERSION = '1.0';
+
+// ---------------------------------------------------------------- Daten
+const KEY = 'sorgenkompass.v1';
+const DEFAULT_CFG = { reviewDays: 14, worryTime: '18:00', exportOn: false, exportTitles: false, driveIntros: true };
+function freshDb() { return { schema: 1, cfg: Object.assign({}, DEFAULT_CFG), entries: [], inbox: [] }; }
+let saveOk = true;
+function loadDb() {
+  try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && Array.isArray(j.entries)) return normalize(j); } catch (e) {}
+  return freshDb();
+}
+function normalize(j) {
+  const d = freshDb();
+  d.cfg = Object.assign(d.cfg, j.cfg || {});
+  d.entries = (j.entries || []).filter(e => e && e.id && TYPES[e.type]).map(e => Object.assign({ data: {}, done: false }, e));
+  d.inbox = (j.inbox || []).filter(x => x && x.id && typeof x.text === 'string');
+  return d;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); saveOk = true; } catch (e) { saveOk = false; } }
+
+function dstr(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function today() { return dstr(new Date()); }
+function addDays(date, n) { const d = new Date(date + 'T12:00'); d.setDate(d.getDate() + n); return dstr(d); }
+function dShort(s) { return s ? s.slice(8, 10) + '.' + s.slice(5, 7) + '.' : ''; }
+function dLong(s) { return s ? dShort(s) + s.slice(0, 4) : ''; }
+function nowHM() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function short(s, n) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function pct(a, b) { return b ? Math.round(a / b * 100) : 0; }
+
+// ---------------------------------------------------------------- Uebungen
+// Feldtypen: text, area, range (min/max/step/unit), check, chips (opts, multi),
+// date, list (sub: Felder je Zeile), pick (Auswahl aus einer Liste des Eintrags).
+// s0/s1 = Stress vorher/nachher (0-10), prob = geschaetzte Wahrscheinlichkeit (%),
+// next/nextDate = naechster Schritt. Diese Schluessel liest die Auswertung.
+const S0 = { k: 's0', t: 'range', label: 'Wie gestresst bist du gerade?', min: 0, max: 10, step: 1, unit: '/10', def: 5 };
+const PROB = { k: 'prob', t: 'range', label: 'Wie wahrscheinlich ist es, dass das Befürchtete wirklich eintritt?', min: 0, max: 100, step: 5, unit: ' %', nodef: true };
+const END = [
+  { k: 'next', t: 'text', label: 'Nächster konkreter Schritt (klein genug für heute oder morgen)', ph: 'z. B. Anruf bei …, 20 Minuten recherchieren' },
+  { k: 'nextDate', t: 'date', label: 'Bis wann?' },
+  { k: 's1', t: 'range', label: 'Wie gestresst bist du jetzt?', min: 0, max: 10, step: 1, unit: '/10', fromS0: true }];
+const DISTORT = [
+  ['kat', 'Katastrophisieren', 'vom Schlimmsten ausgehen'],
+  ['sw', 'Schwarz-Weiß', 'alles oder nichts, kein Dazwischen'],
+  ['lesen', 'Gedankenlesen', 'zu wissen meinen, was andere denken'],
+  ['hell', 'Hellsehen', 'die Zukunft als sicher ansehen'],
+  ['immer', 'Verallgemeinern', '„immer“, „nie“, „alle“'],
+  ['filter', 'Filtern', 'nur das Negative sehen, Gutes zählt nicht'],
+  ['gefuehl', 'Gefühl als Beweis', '„ich fühle es, also stimmt es“'],
+  ['muss', 'Muss-Sätze', 'starre Regeln an sich oder andere'],
+  ['etikett', 'Etikettieren', '„ich bin ein Versager“ statt „das lief schlecht“'],
+  ['ich', 'Persönlich nehmen', 'alles auf sich beziehen']];
+const DISTORT_VK = [['katastroph', 'schlimmste'], ['schwarz', 'weiß', 'alles oder nichts'], ['gedanken lesen', 'gedankenlesen'], ['hellseh', 'zukunft'], ['verallgemein', 'immer', 'nie '], ['filter', 'negativ'], ['gefühl'], ['muss', 'müssen', 'sollte'], ['etikett', 'versager'], ['persönlich', 'auf mich bezogen']];
+const ZONES = ['Liegt bei mir', 'Teilweise', 'Nicht beeinflussbar'];
+
+const TYPES = {
+  fs: {
+    name: 'Fear Setting', short: 'Fear Setting', review: true,
+    pitch: 'Ich überlege, etwas zu wagen oder zu ändern',
+    steps: [
+      { h: 'Worum geht es?', intro: 'Fear Setting nach Tim Ferriss: Statt Ziele schreibst du deine Befürchtungen auf, so genau, dass sie greifbar werden. Hinter einer Entscheidung, die man vor sich herschiebt, steckt oft eine diffuse Angst. Aufgeschrieben ist sie meist kleiner und besser zu lösen.',
+        fields: [{ k: 'title', t: 'area', label: 'Was überlegst du zu tun, zu ändern oder anzusprechen?' }, S0] },
+      { h: 'Befürchten · Vorbeugen · Reparieren', intro: 'Was könnte schiefgehen, wenn du es tust? Schreib jede Befürchtung einzeln auf. Dann: Was kannst du tun, damit sie gar nicht erst eintritt? Und falls sie doch eintritt: Wie bringst du es wieder in Ordnung, oder wen fragst du um Hilfe?',
+        fields: [{ k: 'fears', t: 'list', add: 'Befürchtung hinzufügen', more: 'Noch eine Befürchtung?', min: 1, sub: [
+          { k: 'fear', t: 'area', label: 'Befürchtung' },
+          { k: 'prevent', t: 'area', label: 'Vorbeugen: Was kann ich tun, damit es nicht passiert?' },
+          { k: 'repair', t: 'area', label: 'Reparieren: Was tue ich, wenn es doch passiert?' },
+          { k: 'sev', t: 'range', label: 'Wie schlimm wäre das?', min: 1, max: 10, step: 1, unit: '/10', nodef: true }] }] },
+      { h: 'Was bringt ein Versuch?', intro: 'Was gewinnst du, wenn es klappt oder auch nur teilweise klappt? Denk an Selbstvertrauen, Erfahrung, Geld, Beziehungen und Gesundheit.',
+        fields: [{ k: 'benefits', t: 'area', label: 'Nutzen eines Versuchs oder Teilerfolgs' },
+          { k: 'benefitSize', t: 'range', label: 'Wie groß wäre der Nutzen schon eines Teilerfolgs?', min: 1, max: 10, step: 1, unit: '/10', nodef: true }] },
+      { h: 'Was kostet das Nichtstun?', intro: 'Wenn du es nicht tust und alles so bleibt: Wie sieht dein Leben dann aus? Denk an Gefühl, Geld und Körper. Diese Kosten übersieht man leicht, weil sie sich langsam ansammeln.',
+        fields: [{ k: 'c6', t: 'area', label: 'In 6 Monaten' }, { k: 'c12', t: 'area', label: 'In 1 Jahr' }, { k: 'c36', t: 'area', label: 'In 3 Jahren' }] },
+      { h: 'Entscheiden', intro: 'Leg die drei Seiten nebeneinander: Befürchtungen mit Vorbeugen und Reparieren, den Nutzen eines Versuchs und die Kosten des Nichtstuns.',
+        fields: [{ k: 'decision', t: 'chips', label: 'Wie entscheidest du dich?', opts: ['Ich mache es', 'Ich teste es im Kleinen', 'Ich warte bewusst', 'Ich lasse es'], vk: [['mache', 'machen', 'tue es', 'ja'], ['test', 'klein', 'probier'], ['warte', 'später', 'abwarten'], ['lasse', 'lass', 'nicht machen', 'nein']], vorder: [1, 2, 3, 0] }, PROB].concat(END) }]
+  },
+  wf: {
+    name: 'Sorgen-Formel', short: 'Sorgen-Formel', review: true,
+    pitch: 'Ich mache mir Sorgen über etwas',
+    steps: [
+      { h: 'Die Sorge', intro: 'Diese Übung folgt Dale Carnegie, der sie vom Ingenieur Willis Carrier übernommen hat. Du siehst dir zuerst den schlimmsten Fall an, nimmst ihn innerlich an und verwendest die frei gewordene Kraft dann darauf, dass es besser ausgeht. So wird aus der Sorge eine Aufgabe.',
+        fields: [{ k: 'title', t: 'area', label: 'Worüber machst du dir Sorgen?' }, S0] },
+      { h: 'Erst die Fakten', intro: 'Viele Sorgen beruhen auf Vermutungen. Trenne, was du sicher weißt, von dem, was du nur annimmst, und schätze ehrlich, wie wahrscheinlich es ist. Die Schätzung kommt im Rückblick wieder.',
+        fields: [{ k: 'facts', t: 'area', label: 'Was weiß ich sicher?' }, { k: 'guess', t: 'area', label: 'Was vermute ich nur?' }, PROB] },
+      { h: 'Der schlimmste Fall', intro: 'Schau ihn dir in Ruhe an. Was wäre realistisch das Schlimmste? Meist ist es unangenehm, aber zu überleben. Wenn du ihn innerlich annimmst, hört das Kreisen oft auf.',
+        fields: [{ k: 'worst', t: 'area', label: 'Was ist das Schlimmste, das realistisch passieren kann?' },
+          { k: 'accept', t: 'check', label: 'Ich kann damit leben, falls es so kommt' },
+          { k: 'acceptText', t: 'area', label: 'Falls es so kommt, dann …' }] },
+      { h: 'Besser machen', intro: 'Der schlimmste Fall ist angenommen, der Kopf ist frei. Was kannst du jetzt tun, damit es besser ausgeht als befürchtet?',
+        fields: [{ k: 'improve', t: 'area', label: 'Was kann ich tun, damit es besser ausgeht?' }, { k: 'decision', t: 'text', label: 'Meine Entscheidung' }] },
+      { h: 'Der Sorge eine Grenze setzen', intro: 'Zwei Gedanken von Carnegie: Eine Sorge bekommt nur so viel Zeit und Kraft, wie sie wert ist, wie eine Verkaufsgrenze an der Börse. Und du lebst in Tagesabschnitten: Gestern ist vorbei, morgen kommt erst noch. Was gehört wirklich zu heute?',
+        fields: [{ k: 'past', t: 'check', label: 'Es ist schon vorbei und nicht mehr zu ändern. Ich lasse es los.' },
+          { k: 'stop', t: 'area', label: 'Was ist mir diese Sorge höchstens wert? Ab wann lasse ich sie los?' },
+          { k: 'todayPart', t: 'area', label: 'Was davon gehört zu heute? Der Rest kann warten.' }] },
+      { h: 'Abschluss', intro: 'Ein einziger kleiner Schritt reicht, damit aus der Sorge Handlung wird.', fields: END }]
+  },
+  cc: {
+    name: 'Kontrollkreis', short: 'Kontrollkreis', review: false,
+    pitch: 'Mir ist alles zu viel auf einmal',
+    steps: [
+      { h: 'Was belastet dich?', intro: 'Die Stoiker, etwa Epiktet und Mark Aurel, trennten streng: Manches liegt in unserer Hand, vieles nicht. Sorgen um das, was du nicht beeinflussen kannst, kosten Kraft und ändern nichts.',
+        fields: [{ k: 'title', t: 'area', label: 'Was belastet dich gerade? Ein Stichwort reicht.' }, S0] },
+      { h: 'Sortieren', intro: 'Schreib alles auf, was dir durch den Kopf geht, und ordne jeden Punkt ein.',
+        fields: [{ k: 'items', t: 'list', add: 'Punkt hinzufügen', more: 'Noch ein Punkt?', min: 1, sub: [
+          { k: 'text', t: 'text', label: 'Punkt' }, { k: 'zone', t: 'chips', label: 'Liegt das bei dir?', opts: ZONES, vk: [['bei mir', 'ich kann', 'ja'], ['teil', 'bisschen', 'etwas'], ['nicht', 'nein', 'kann ich nicht']], vorder: [2, 1, 0] }] }] },
+      { h: 'Handeln und Loslassen', intro: 'Bei „Teilweise“: Welcher Teil liegt bei dir? Wähl einen Punkt, den du heute angehst. Den Rest legst du bewusst ab.',
+        fields: [{ k: 'pick', t: 'pick', label: 'Das gehe ich heute an', from: 'items', field: 'text', filter: it => it.zone === 0 || it.zone === 1 },
+          { k: 'letgo', t: 'area', label: 'Das lasse ich bewusst los' }] },
+      { h: 'Abschluss', intro: '', fields: END }]
+  },
+  tr: {
+    name: 'Gedankenprotokoll', short: 'Gedankenprotokoll', review: false,
+    pitch: 'Ein Gedanke zieht mich runter',
+    steps: [
+      { h: 'Die Situation', intro: 'Das Gedankenprotokoll stammt aus der kognitiven Verhaltenstherapie. Das Gefühl entsteht nicht durch die Situation allein, sondern auch durch den Gedanken dazu. Den kannst du prüfen wie eine Behauptung.',
+        fields: [{ k: 'title', t: 'area', label: 'Was ist passiert? Wann, wo, mit wem?' }, S0] },
+      { h: 'Gedanke und Gefühl', intro: 'Schreib den Gedanken so auf, wie er in deinem Kopf klang, auch wenn er übertrieben wirkt.',
+        fields: [{ k: 'thought', t: 'area', label: 'Was ging dir durch den Kopf?' }, { k: 'feeling', t: 'text', label: 'Welches Gefühl?', ph: 'z. B. Angst, Ärger, Scham' },
+          { k: 'f0', t: 'range', label: 'Wie stark ist das Gefühl?', min: 0, max: 100, step: 5, unit: ' %', def: 70 }] },
+      { h: 'Prüfen', intro: 'Wie vor Gericht: Was spricht dafür, was dagegen? Nur Tatsachen zählen, keine Eindrücke.',
+        fields: [{ k: 'pro', t: 'area', label: 'Was spricht für den Gedanken?' }, { k: 'con', t: 'area', label: 'Was spricht dagegen?' },
+          { k: 'friend', t: 'area', label: 'Was würdest du einem guten Freund in dieser Lage sagen?' }] },
+      { h: 'Denkfallen', intro: 'Erkennst du eine dieser typischen Denkfallen wieder? Mehrere sind möglich.',
+        fields: [{ k: 'distort', t: 'chips', multi: true, label: '', opts: DISTORT.map(d => d[1]), hints: DISTORT.map(d => d[2]), vk: DISTORT_VK, vlabel: 'Erkennst du eine Denkfalle? Zum Beispiel Katastrophisieren, Schwarz-Weiß, Gedankenlesen, Hellsehen, Verallgemeinern, Filtern, Gefühl als Beweis, Muss-Sätze, Etikettieren oder persönlich nehmen. Nenne sie, oder sag nein.' }] },
+      { h: 'Neu denken', intro: 'Formuliere einen Gedanken, der fair ist: nicht schöngefärbt, aber auch nicht schwarzgemalt.',
+        fields: [{ k: 'balanced', t: 'area', label: 'Ausgewogener Gedanke' },
+          { k: 'f1', t: 'range', label: 'Wie stark ist das Gefühl jetzt?', min: 0, max: 100, step: 5, unit: ' %', fromKey: 'f0' }] },
+      { h: 'Abschluss', intro: '', fields: END }]
+  }
+};
+const TYPE_KEYS = Object.keys(TYPES);
+
+// ---------------------------------------------------------------- Reine Funktionen
+const HAPPENED = { nein: 0, teils: 0.5, ja: 1 };
+const HAP_TXT = { nein: 'nicht eingetreten', teils: 'teilweise eingetreten', ja: 'eingetreten' };
+const SEV_TXT = { milder: 'milder als befürchtet', gleich: 'so wie befürchtet', schlimmer: 'schlimmer als befürchtet' };
+function newEntry(type, s0, title, now) {
+  const e = { id: uid(), type, created: now || today(), done: false, data: {} };
+  if (typeof s0 === 'number') e.data.s0 = s0;
+  if (title) e.data.title = title;
+  return e;
+}
+function finishEntry(e, reviewDays, now) {
+  e.done = true; e.finished = now || today();
+  if (TYPES[e.type].review && !e.review && !e.reviewAt) e.reviewAt = addDays(e.finished, reviewDays);
+  return e;
+}
+function dueReviews(entries, now) {
+  return entries.filter(e => e.done && TYPES[e.type] && TYPES[e.type].review && !e.review && e.reviewAt && e.reviewAt <= now)
+    .sort((a, b) => a.reviewAt < b.reviewAt ? -1 : 1);
+}
+// Quote: Wie viele gepruefte Befuerchtungen sind eingetreten, und wie gut war die Schaetzung?
+function quote(entries) {
+  const r = entries.filter(e => e.review && e.review.happened in HAPPENED);
+  const q = { n: r.length, nein: 0, teils: 0, ja: 0, milder: 0, gleich: 0, schlimmer: 0, est: null, real: null, nEst: 0 };
+  r.forEach(e => { q[e.review.happened]++; if (e.review.sev in SEV_TXT) q[e.review.sev]++; });
+  const withP = r.filter(e => typeof e.data.prob === 'number');
+  if (withP.length) {
+    q.nEst = withP.length;
+    q.est = Math.round(withP.reduce((a, e) => a + e.data.prob, 0) / withP.length);
+    q.real = Math.round(withP.reduce((a, e) => a + HAPPENED[e.review.happened], 0) / withP.length * 100);
+  }
+  return q;
+}
+function stressDelta(entries) {
+  const out = {};
+  entries.forEach(e => {
+    if (!e.done || typeof e.data.s0 !== 'number' || typeof e.data.s1 !== 'number') return;
+    const o = out[e.type] || (out[e.type] = { n: 0, before: 0, after: 0 });
+    o.n++; o.before += e.data.s0; o.after += e.data.s1;
+  });
+  Object.keys(out).forEach(k => { const o = out[k]; o.before = Math.round(o.before / o.n * 10) / 10; o.after = Math.round(o.after / o.n * 10) / 10; });
+  return out;
+}
+function openSteps(entries) {
+  return entries.filter(e => e.done && e.data.next && !e.stepDone)
+    .sort((a, b) => (a.data.nextDate || '9999') < (b.data.nextDate || '9999') ? -1 : 1);
+}
+function isWorryTime(hm, worryTime) { return !!worryTime && hm >= worryTime; }
+function fmtNum(x) { return String(x).replace('.', ','); }
+// Text fuer den Health-OS-Chat. Freitext nur, wenn ausdruecklich gewuenscht.
+function exportText(d, from, to, withTitles) {
+  const inRange = s => s && s >= from && s <= to;
+  const done = d.entries.filter(e => e.done && inRange(e.finished || e.created));
+  const rev = d.entries.filter(e => e.review && inRange(e.review.at));
+  const head = 'STRESS ' + (from === to ? dLong(from) : dLong(from) + ' bis ' + dLong(to));
+  const lines = [head];
+  if (!done.length) lines.push('Übungen: keine');
+  else {
+    lines.push('Übungen: ' + done.length);
+    done.forEach(e => {
+      let s = '- ' + (from === to ? '' : dShort(e.finished || e.created) + ' ') + TYPES[e.type].short;
+      if (withTitles && e.data.title) s += ' „' + short(e.data.title, 80) + '“';
+      const bits = [];
+      if (typeof e.data.s0 === 'number' && typeof e.data.s1 === 'number') bits.push('Stress ' + e.data.s0 + ' → ' + e.data.s1);
+      if (e.type === 'tr' && typeof e.data.f0 === 'number' && typeof e.data.f1 === 'number') bits.push('Gefühl ' + e.data.f0 + ' % → ' + e.data.f1 + ' %');
+      if (typeof e.data.prob === 'number') bits.push('geschätzt ' + e.data.prob + ' %');
+      if (e.type === 'fs' && e.data.decision) bits.push('Entscheidung: ' + e.data.decision);
+      if (bits.length) s += ': ' + bits.join(', ');
+      lines.push(s);
+    });
+  }
+  if (rev.length) {
+    const c = { nein: 0, teils: 0, ja: 0 }; rev.forEach(e => c[e.review.happened]++);
+    lines.push('Rückblick: ' + rev.length + ' geprüft (' + ['nein', 'teils', 'ja'].filter(k => c[k]).map(k => c[k] + '× ' + HAP_TXT[k]).join(', ') + ')');
+  }
+  const q = quote(d.entries);
+  if (q.n) lines.push('Bisher eingetreten: ' + q.ja + ' von ' + q.n + ' Befürchtungen' + (q.teils ? ', ' + q.teils + ' teilweise' : ''));
+  const open = d.inbox.filter(x => !x.done).length;
+  if (open) lines.push('Sorgenzeit: ' + open + ' Notizen offen');
+  return lines.join('\n');
+}
+function parseBackup(text) {
+  const j = JSON.parse(text);
+  if (!j || j.app !== 'sorgenkompass' || !j.data || !Array.isArray(j.data.entries)) throw new Error('keine Sicherung');
+  return normalize(j.data);
+}
+function getPath(o, path) { return path.split('.').reduce((a, k) => a == null ? a : a[k], o); }
+function setPath(o, path, v) {
+  const ks = path.split('.'); let cur = o;
+  for (let i = 0; i < ks.length - 1; i++) { if (cur[ks[i]] == null) cur[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {}; cur = cur[ks[i]]; }
+  cur[ks[ks.length - 1]] = v;
+}
+function hasValue(v) { return Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null && v !== '' && v !== false; }
+
+// ---------------------------------------------------------------- Sprache verstehen (rein)
+function norm(t) { return ' ' + String(t || '').toLowerCase().replace(/[.,!?;:„“"()]/g, ' ').replace(/\s+/g, ' ').trim() + ' '; }
+// Befehl nur, wenn die ganze Antwort (fast) nur aus dem Befehl besteht.
+const CMDS = { skip: ['weiter', 'überspringen', 'nächste', 'nächste frage', 'weiß nicht', 'keine ahnung', 'nichts', 'skip'], stop: ['stopp', 'stop', 'beenden', 'ende', 'aufhören', 'abbrechen', 'pause'], repeat: ['wiederholen', 'nochmal', 'noch mal', 'wie bitte', 'was'] };
+function voiceCmd(t) {
+  const n = norm(t).trim();
+  for (const k in CMDS) if (CMDS[k].indexOf(n) >= 0) return k;
+  return null;
+}
+function parseYesNo(t) {
+  const n = norm(t);
+  if (/ (nein|nee|nö|ne|nicht|noch nicht|kein|keine) /.test(n)) return false;
+  if (/ (ja|jo|jep|jawohl|genau|klar|richtig|stimmt|okay|ok|gerne|sicher) /.test(n)) return true;
+  return null;
+}
+// "ein/eine" nur als ganze Antwort: "eine Sieben" soll 7 sein, nicht 1.
+const NUMW = { null: 0, eins: 1, zwei: 2, zwo: 2, drei: 3, vier: 4, 'fünf': 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, 'zwölf': 12,
+  dreizehn: 13, vierzehn: 14, 'fünfzehn': 15, sechzehn: 16, siebzehn: 17, achtzehn: 18, neunzehn: 19,
+  zwanzig: 20, 'dreißig': 30, vierzig: 40, 'fünfzig': 50, sechzig: 60, siebzig: 70, achtzig: 80, neunzig: 90, hundert: 100, einhundert: 100 };
+function parseNumber(t) {
+  const n = norm(t), d = n.match(/-?\d+([.,]\d+)?/);
+  if (d) return Math.round(parseFloat(d[0].replace(',', '.')));
+  if (/ (halb|hälfte|fifty fifty) /.test(n)) return 50;
+  if (/^ (ein|eine|einer) $/.test(n)) return 1;
+  for (const w of n.trim().split(' ')) {
+    if (w in NUMW) return NUMW[w];
+    const m = w.match(/^(ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)und(zwanzig|dreißig|vierzig|fünfzig|sechzig|siebzig|achtzig|neunzig)$/);
+    if (m) return NUMW[m[2]] + (m[1] === 'ein' ? 1 : NUMW[m[1]]);
+  }
+  return null;
+}
+const WDAYS = ['sonntag', 'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag'];
+function parseDate(t, now) {
+  const n = norm(t);
+  if (/ übermorgen /.test(n)) return addDays(now, 2);
+  if (/ morgen /.test(n)) return addDays(now, 1);
+  if (/ heute /.test(n)) return now;
+  if (/ nächste woche /.test(n)) return addDays(now, 7);
+  const m = n.match(/ in (\S+) (tag|tagen|woche|wochen) /);
+  if (m) { const k = parseNumber(m[1]); if (k !== null) return addDays(now, k * (m[2][0] === 'w' ? 7 : 1)); }
+  const wd = WDAYS.findIndex(w => n.indexOf(' ' + w) >= 0);
+  if (wd >= 0) { const cur = new Date(now + 'T12:00').getDay(); return addDays(now, ((wd - cur + 7) % 7) || 7); }
+  return null;
+}
+// Welche Option ist gemeint? vk: Stichworte je Option, vorder: Pruefreihenfolge.
+function matchOptions(t, opts, vk, vorder) {
+  const n = norm(t), hits = [];
+  (vorder || opts.map((_, i) => i)).forEach(i => {
+    const keys = (vk && vk[i] ? vk[i] : []).concat([String(opts[i]).toLowerCase()]);
+    if (keys.some(k => n.indexOf(k.length <= 3 ? ' ' + k + ' ' : k) >= 0)) hits.push(i);
+  });
+  return hits;
+}
+function stepSpeech(st) { return st.h + '. ' + (st.intro || ''); }
+function fieldQuestion(f, opts) {
+  if (f.vlabel) return f.vlabel;
+  const l = f.label || '';
+  if (f.t === 'range') return l + ' Sag eine Zahl von ' + f.min + ' bis ' + f.max + (f.unit === ' %' ? ' Prozent.' : '.');
+  if (f.t === 'check') return l + '. Ja oder nein?';
+  if (f.t === 'date') return l + ' Zum Beispiel heute, morgen, Freitag oder in drei Tagen.';
+  if (f.t === 'chips' || f.t === 'pick') return l + ' ' + (opts || f.opts).join(', oder ') + '?';
+  return l;
+}
+
+// ---------------------------------------------------------------- Sprache: Ein- und Ausgabe
+// Auf dem Handy ueber window.SkAndroid (android-src/VoiceBridge.java), im
+// Desktop-Browser ueber die Web Speech API. window.SK_FAKE_VOICE (Liste von
+// Antworten) ersetzt fuer den Test Mikrofon und Lautsprecher.
+const NATIVE = window.SkAndroid;
+const Voice = (() => {
+  let seq = 1, rec = null; const waits = {};
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  window.skVoice = (id, kind, text) => { const w = waits[id]; if (w) { delete waits[id]; w({ kind, text }); } };
+  const wait = id => new Promise(res => { waits[id] = res; });
+  return {
+    fake: () => Array.isArray(window.SK_FAKE_VOICE),
+    canListen() { return this.fake() || !!NATIVE || !!SR; },
+    canSpeak() { return this.fake() || !!NATIVE || !!window.speechSynthesis; },
+    async speak(text) {
+      if (this.fake()) { (window.SK_SPOKEN = window.SK_SPOKEN || []).push(text); return { kind: 'spoken' }; }
+      if (NATIVE) {
+        const id = seq++, p = wait(id);
+        for (let i = 0; i < 25; i++) { if (NATIVE.speak(text, id)) return p; await new Promise(r => setTimeout(r, 200)); }
+        delete waits[id]; return { kind: 'error' };
+      }
+      if (!window.speechSynthesis) return { kind: 'error' };
+      return new Promise(res => {
+        const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE';
+        u.onend = () => res({ kind: 'spoken' }); u.onerror = () => res({ kind: 'error' });
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      });
+    },
+    async listen(prompt) {
+      if (this.fake()) { const a = window.SK_FAKE_VOICE.shift(); return a === undefined || a === '' ? { kind: 'none', text: '' } : { kind: 'heard', text: a }; }
+      if (NATIVE) { const id = seq++, p = wait(id); NATIVE.listen(id, prompt || ''); return p; }
+      if (!SR) return { kind: 'unavailable', text: '' };
+      return new Promise(res => {
+        let got = '', done = false; rec = new SR(); rec.lang = 'de-DE'; rec.interimResults = false; rec.maxAlternatives = 1;
+        rec.onresult = ev => { got = ev.results[0][0].transcript; };
+        rec.onerror = ev => { if (!done) { done = true; res({ kind: ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'unavailable' : 'none', text: '' }); } };
+        rec.onend = () => { if (!done) { done = true; res(got ? { kind: 'heard', text: got } : { kind: 'none', text: '' }); } };
+        try { rec.start(); } catch (e) { done = true; res({ kind: 'unavailable', text: '' }); }
+      });
+    },
+    stop() {
+      if (NATIVE) NATIVE.stopSpeaking(); else if (window.speechSynthesis) speechSynthesis.cancel();
+      if (rec) try { rec.abort(); } catch (e) {}
+      Object.keys(waits).forEach(id => window.skVoice(+id, 'stopped', ''));
+    }
+  };
+})();
+
+// ---------------------------------------------------------------- Zustand
+const db = loadDb();
+const W = { pending: null, fromView: false };   // Assistent: Ziel nach dem Abschluss
+let homeStress = 5, histFilter = 'all';
+function entry(id) { return db.entries.find(e => e.id === id); }
+
+// ---------------------------------------------------------------- Formular-Motor
+function rangeShow(f, v) { return v === undefined || v === null ? '–' : v + (f.unit || ''); }
+function fieldHtml(f, d, path) {
+  const v = getPath(d, path), lab = f.label ? '<label class="f">' + esc(f.label) + (f.t === 'range' ? ' <b data-show="' + path + '">' + esc(rangeShow(f, v)) + '</b>' : '') + '</label>' : '';
+  switch (f.t) {
+    case 'text': return lab + '<div class="fw"><input type="text" data-k="' + path + '" maxlength="300" value="' + esc(v || '') + '" placeholder="' + esc(f.ph || '') + '">' + micBtn(path) + '</div>';
+    case 'area': return lab + '<div class="fw"><textarea data-k="' + path + '" placeholder="' + esc(f.ph || '') + '">' + esc(v || '') + '</textarea>' + micBtn(path) + '</div>';
+    case 'date': return lab + '<input type="date" data-k="' + path + '" value="' + esc(v || '') + '">';
+    case 'range': {
+      const shown = v === undefined ? (f.def !== undefined ? f.def : Math.round((f.min + f.max) / 2 / f.step) * f.step) : v;
+      return lab + '<input type="range" data-k="' + path + '" data-t="num" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + shown + '">' +
+        (f.nodef && v === undefined ? '<div class="small muted" data-hint="' + path + '">Noch nicht geschätzt: Regler bewegen.</div>' : '');
+    }
+    case 'check': return '<label class="c"><input type="checkbox" data-k="' + path + '" data-t="bool"' + (v ? ' checked' : '') + '><span>' + esc(f.label) + '</span></label>';
+    case 'chips': {
+      const sel = f.multi ? (Array.isArray(v) ? v : []) : v;
+      return lab + '<div class="chips" style="margin-top:6px">' + f.opts.map((o, i) => {
+        const val = f.opts === ZONES ? i : o, on = f.multi ? sel.indexOf(o) >= 0 : sel === val;
+        return '<button class="chip' + (on ? ' on' : '') + '" data-chip="' + path + '" data-v="' + esc(String(val)) + '" data-multi="' + (f.multi ? 1 : 0) + '" data-num="' + (f.opts === ZONES ? 1 : 0) + '">' + esc(o) + '</button>';
+      }).join('') + '</div>' + (f.hints ? '<div class="small muted" style="margin-top:8px">' + f.opts.map((o, i) => '<b>' + esc(o) + '</b>: ' + esc(f.hints[i])).join(' · ') + '</div>' : '');
+    }
+    case 'pick': {
+      const list = (d[f.from] || []).filter(it => it && (it[f.field] || '').trim() && (!f.filter || f.filter(it)));
+      if (!list.length) return lab + '<div class="small muted">Noch kein Punkt bei „Liegt bei mir“ oder „Teilweise“. Geh einen Schritt zurück und ordne ihn ein.</div>';
+      return lab + '<div class="chips" style="margin-top:6px">' + list.map(it => {
+        const t = it[f.field].trim();
+        return '<button class="chip' + (v === t ? ' on' : '') + '" data-chip="' + path + '" data-v="' + esc(t) + '" data-multi="0" data-num="0">' + esc(short(t, 60)) + '</button>';
+      }).join('') + '</div>';
+    }
+    case 'list': {
+      let rows = Array.isArray(v) ? v : [];
+      if (rows.length < (f.min || 0)) { rows = rows.concat(Array.from({ length: f.min - rows.length }, () => ({}))); setPath(d, path, rows); }
+      return rows.map((row, i) => '<div class="sub"><div class="head"><span>' + (i + 1) + '.</span>' +
+        (rows.length > 1 ? '<button class="small ghost danger" data-del="' + path + '" data-i="' + i + '">Entfernen</button>' : '') + '</div>' +
+        f.sub.map(sf => fieldHtml(sf, d, path + '.' + i + '.' + sf.k)).join('') + '</div>').join('') +
+        '<button class="block" data-add="' + path + '">+ ' + esc(f.add) + '</button>';
+    }
+  }
+  return '';
+}
+function micBtn(path) { return Voice.canListen() ? '<button class="mic" data-mic="' + path + '" aria-label="Diktieren">🎤</button>' : ''; }
+function appendText(old, add) { old = String(old || '').trim(); add = String(add || '').trim(); if (!add) return old; return old ? old + (/[.!?]$/.test(old) ? ' ' : ', ') + add : add.charAt(0).toUpperCase() + add.slice(1); }
+function fieldText(f, v) {
+  if (!hasValue(v)) return '';
+  if (f.t === 'range') return v + (f.unit || '');
+  if (f.t === 'check') return '✓';
+  if (f.t === 'chips' && f.multi) return v.join(', ');
+  if (f.t === 'chips' && f.opts === ZONES) return ZONES[v] || '';
+  if (f.t === 'date') return dLong(v);
+  return String(v);
+}
+// Eingaben im Assistenten: alles wird sofort gespeichert.
+function bindForm(root, e, onRerender) {
+  root.addEventListener('input', ev => {
+    const el = ev.target, k = el.dataset.k; if (!k) return;
+    let v = el.dataset.t === 'num' ? +el.value : el.dataset.t === 'bool' ? el.checked : el.value;
+    setPath(e.data, k, v); save();
+    const show = root.querySelector('[data-show="' + k + '"]');
+    if (show) { const f = findField(e, k); show.textContent = rangeShow(f, v); }
+    const hint = root.querySelector('[data-hint="' + k + '"]'); if (hint) hint.remove();
+  });
+  root.addEventListener('change', ev => { if (ev.target.dataset.t === 'bool') { setPath(e.data, ev.target.dataset.k, ev.target.checked); save(); } });
+  root.addEventListener('click', ev => {
+    const b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.mic) {
+      const k = b.dataset.mic, f = findField(e, k);
+      b.textContent = '…'; b.disabled = true;
+      Voice.listen(f.label).then(r => {
+        b.textContent = '🎤'; b.disabled = false;
+        if (r.kind === 'unavailable') { toast('Spracheingabe ist auf diesem Gerät nicht verfügbar.'); return; }
+        if (r.kind !== 'heard') return;
+        const v = appendText(getPath(e.data, k), r.text); setPath(e.data, k, v); save();
+        const el = root.querySelector('[data-k="' + k + '"]'); if (el) el.value = v;
+      });
+    } else if (b.dataset.chip) {
+      const k = b.dataset.chip, val = b.dataset.num === '1' ? +b.dataset.v : b.dataset.v;
+      if (b.dataset.multi === '1') {
+        const arr = Array.isArray(getPath(e.data, k)) ? getPath(e.data, k).slice() : [], i = arr.indexOf(val);
+        if (i >= 0) arr.splice(i, 1); else arr.push(val);
+        setPath(e.data, k, arr); b.classList.toggle('on', i < 0);
+      } else {
+        const same = getPath(e.data, k) === val;
+        setPath(e.data, k, same ? undefined : val);
+        b.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', !same && c === b));
+      }
+      save();
+    } else if (b.dataset.add) {
+      const arr = getPath(e.data, b.dataset.add) || []; arr.push({}); setPath(e.data, b.dataset.add, arr); save(); onRerender(true);
+    } else if (b.dataset.del) {
+      const arr = getPath(e.data, b.dataset.del) || []; arr.splice(+b.dataset.i, 1); save(); onRerender(false);
+    }
+  });
+}
+function findField(e, path) {
+  const parts = path.split('.');
+  for (const st of TYPES[e.type].steps) for (const f of st.fields) {
+    if (f.k !== parts[0]) continue;
+    if (parts.length === 1) return f;
+    return f.sub.find(sf => sf.k === parts[2]) || f;
+  }
+  return {};
+}
+
+// ---------------------------------------------------------------- Ansichten
+const view = $('view');
+const TITLES = { home: 'Sorgenkompass', hist: 'Verlauf', stats: 'Auswertung', set: 'Einstellungen', info: 'Über die Übungen', inbox: 'Sorgenzeit' };
+const VIEWS = {};
+
+VIEWS.home = () => {
+  const due = dueReviews(db.entries, today()), open = db.inbox.filter(x => !x.done), steps = openSteps(db.entries);
+  const unfinished = db.entries.filter(e => !e.done).sort((a, b) => a.created < b.created ? 1 : -1);
+  const q = quote(db.entries), wt = isWorryTime(nowHM(), db.cfg.worryTime);
+  let h = '';
+  if (!saveOk) h += '<div class="card hi small">Speichern klappt gerade nicht. Bitte eine Sicherung anlegen.</div>';
+  if (due.length) h += '<div class="card hi"><h2>Rückblick fällig</h2><div class="small muted">Du hast dir Sorgen gemacht. Wie ist es ausgegangen?</div>' +
+    due.slice(0, 3).map(e => '<div class="item tap" data-rev="' + e.id + '"><div class="grow"><div>' + esc(short(e.data.title || TYPES[e.type].name, 70)) + '</div><div class="small muted">' + TYPES[e.type].short + ' vom ' + dShort(e.created) + '</div></div><button class="small primary">Prüfen</button></div>').join('') +
+    (due.length > 3 ? '<div class="small muted">… und ' + (due.length - 3) + ' weitere</div>' : '') + '</div>';
+  h += '<div class="card acc"><h2>Was beschäftigt dich?</h2><label class="f" style="margin-top:0">Stress gerade <b id="hs-v">' + homeStress + '/10</b></label>' +
+    '<input type="range" id="hs" min="0" max="10" step="1" value="' + homeStress + '">' +
+    TYPE_KEYS.map(k => '<button class="go" data-new="' + k + '"><b>' + esc(TYPES[k].pitch) + '</b><span>' + TYPES[k].name + '</span></button>').join('') +
+    (Voice.canListen() && Voice.canSpeak() ? '<button class="go" id="drive-home" style="border-color:var(--acc)"><b>🎙 Per Sprache (Fahrmodus)</b><span>Fragen werden vorgelesen, du antwortest laut</span></button>' : '') + '</div>';
+  h += '<div class="card' + (wt && open.length ? ' hi' : '') + '"><h2>Sorgenzeit' + (db.cfg.worryTime ? ' · ' + esc(db.cfg.worryTime) + ' Uhr' : '') + '</h2>' +
+    '<div class="small muted">Sorge, die sich aufdrängt? Kurz notieren und erst zur Sorgenzeit ansehen.</div>' +
+    '<div class="row" style="margin-top:8px"><input type="text" class="grow" id="qn" maxlength="300" placeholder="Was geht dir durch den Kopf?">' + (Voice.canListen() ? '<button class="mic" id="qn-mic" aria-label="Diktieren">🎤</button>' : '') + '<button id="qn-add">Ablegen</button></div>' +
+    '<button class="block" id="go-inbox">' + (open.length ? (wt ? 'Jetzt ist Sorgenzeit: ' : '') + open.length + ' Notiz' + (open.length > 1 ? 'en' : '') + ' ansehen' : 'Notizen ansehen') + '</button></div>';
+  if (unfinished.length) h += '<div class="card"><h2>Angefangen</h2>' + unfinished.slice(0, 5).map(e => '<div class="item tap" data-cont="' + e.id + '"><div class="grow"><div>' + esc(short(e.data.title || 'Ohne Titel', 70)) + '</div><div class="small muted">' + TYPES[e.type].short + ' · ' + dShort(e.created) + '</div></div><span class="muted">›</span></div>').join('') + '</div>';
+  if (steps.length) h += '<div class="card"><h2>Nächste Schritte</h2>' + steps.slice(0, 6).map(e => {
+    const late = e.data.nextDate && e.data.nextDate < today();
+    return '<div class="item"><input type="checkbox" data-step="' + e.id + '" style="width:22px;height:22px"><div class="grow"><div>' + esc(e.data.next) + '</div><div class="small ' + (late ? 'warn' : 'muted') + '">' + (e.data.nextDate ? 'bis ' + dShort(e.data.nextDate) + ' · ' : '') + esc(short(e.data.title || TYPES[e.type].short, 40)) + '</div></div></div>';
+  }).join('') + '</div>';
+  if (q.n) h += '<div class="card"><h2>Deine Quote</h2><div>Von <b>' + q.n + '</b> geprüften Befürchtungen sind <b>' + q.ja + '</b> eingetreten' + (q.teils ? ', ' + q.teils + ' teilweise' : '') + '.</div><button class="block ghost" data-go="stats">Zur Auswertung</button></div>';
+  h += '<div class="row" style="flex-wrap:wrap;margin-top:12px"><button class="grow" data-go="hist">Verlauf</button><button class="grow" data-go="stats">Auswertung</button></div>' +
+    '<div class="row" style="margin-top:8px"><button class="grow" data-go="info">Über die Übungen</button><button class="grow" data-go="set">Einstellungen</button></div>';
+  if (db.cfg.exportOn) h += '<button class="block primary" id="exp">An Claude senden</button>';
+  h += '<div class="foot">Die App ersetzt keine Therapie. Wenn es dir über längere Zeit schlecht geht oder du in einer Krise bist: Telefonseelsorge 0800 111 0 111, kostenlos und rund um die Uhr.</div>';
+  view.innerHTML = h;
+  $('hs').oninput = ev => { homeStress = +ev.target.value; $('hs-v').textContent = homeStress + '/10'; };
+  view.querySelectorAll('[data-new]').forEach(b => b.onclick = () => startEntry(b.dataset.new, homeStress));
+  view.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => reviewDialog(entry(b.dataset.rev)));
+  view.querySelectorAll('[data-cont]').forEach(b => b.onclick = () => { W.fromView = false; go('e/' + b.dataset.cont + '/0'); });
+  view.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+  view.querySelectorAll('[data-step]').forEach(c => c.onchange = () => { const e = entry(c.dataset.step); e.stepDone = today(); save(); render('home'); });
+  const add = () => { const t = $('qn').value.trim(); if (!t) return; db.inbox.push({ id: uid(), text: t, created: today() }); save(); render('home'); };
+  $('qn-add').onclick = add; $('qn').onkeydown = ev => { if (ev.key === 'Enter') add(); };
+  $('go-inbox').onclick = () => go('inbox');
+  if ($('drive-home')) $('drive-home').onclick = driveHome;
+  if ($('qn-mic')) $('qn-mic').onclick = () => Voice.listen('Was geht dir durch den Kopf?').then(r => {
+    if (r.kind === 'unavailable') toast('Spracheingabe ist auf diesem Gerät nicht verfügbar.');
+    if (r.kind === 'heard') { $('qn').value = appendText($('qn').value, r.text); add(); toast('Für die Sorgenzeit abgelegt.'); }
+  });
+  if ($('exp')) $('exp').onclick = exportDialog;
+};
+
+function startEntry(type, s0, title) {
+  const e = newEntry(type, s0, title); db.entries.push(e); save();
+  W.fromView = false; go('e/' + e.id + '/0');
+}
+
+function renderWizard(e, n) {
+  const T = TYPES[e.type], st = T.steps[n], last = n === T.steps.length - 1;
+  // Startwerte, die sich aus frueheren Antworten ergeben
+  st.fields.forEach(f => {
+    if (f.fromS0 && e.data[f.k] === undefined && typeof e.data.s0 === 'number') { e.data[f.k] = e.data.s0; save(); }
+    if (f.fromKey && e.data[f.k] === undefined && typeof e.data[f.fromKey] === 'number') { e.data[f.k] = e.data[f.fromKey]; save(); }
+    if (f.t === 'range' && f.def !== undefined && !f.nodef && e.data[f.k] === undefined) { e.data[f.k] = f.def; save(); }
+  });
+  $('title').textContent = T.name;
+  view.innerHTML = '<div class="steps">' + T.steps.map((_, i) => '<i class="' + (i <= n ? 'on' : '') + '"></i>').join('') + '</div>' +
+    '<div class="small muted">Schritt ' + (n + 1) + ' von ' + T.steps.length + '</div><h2 style="margin:4px 0 2px">' + esc(st.h) + '</h2>' +
+    (st.intro ? '<div class="intro">' + esc(st.intro) + '</div>' : '') +
+    (Voice.canSpeak() || Voice.canListen() ? '<div class="vbar">' + (Voice.canSpeak() ? '<button id="w-read">🔊 Vorlesen</button>' : '') + (Voice.canListen() && Voice.canSpeak() ? '<button id="w-drive">🎙 Fahrmodus</button>' : '') + '</div>' : '') +
+    '<div id="form">' + st.fields.map(f => fieldHtml(f, e.data, f.k)).join('') + '</div>' +
+    '<div class="nav">' + (n > 0 ? '<button id="w-prev">Zurück</button>' : '') + '<button class="primary" id="w-next">' + (last ? 'Fertig' : 'Weiter') + '</button></div>' +
+    (n === 0 ? '<button class="block ghost danger small" id="w-del">Eintrag löschen</button>' : '') +
+    '<div class="foot">Alles wird sofort gespeichert. Felder darfst du leer lassen.</div>';
+  bindForm($('form'), e, (focusLast) => {
+    const y = window.scrollY; renderWizard(e, n); window.scrollTo(0, y);
+    if (focusLast) { const subs = view.querySelectorAll('.sub'); const s = subs[subs.length - 1]; if (s) { const inp = s.querySelector('textarea,input[type=text]'); s.scrollIntoView({ block: 'center' }); inp && inp.focus(); } }
+  });
+  if ($('w-prev')) $('w-prev').onclick = () => history.back();
+  if ($('w-read')) $('w-read').onclick = () => { Voice.stop(); Voice.speak(stepSpeech(st) + ' ' + st.fields.map(f => fieldQuestion(f)).filter(Boolean).join(' ')); };
+  if ($('w-drive')) $('w-drive').onclick = () => { Voice.stop(); drive(e, n); };
+  $('w-next').onclick = () => last ? finishWizard(e, n) : go('e/' + e.id + '/' + (n + 1));
+  if ($('w-del')) $('w-del').onclick = () => confirmDialog('Eintrag löschen?', 'Alles, was du hier eingetragen hast, ist danach weg.', 'Löschen', () => {
+    db.entries = db.entries.filter(x => x !== e); save(); closeModal(); location.replace('#home');
+  });
+}
+function finishWizard(e, n) {
+  finishEntry(e, db.cfg.reviewDays); save();
+  if (W.fromView) { W.fromView = false; history.go(-(n + 1)); return; }
+  W.pending = '#v/' + e.id;
+  if (n > 0) history.go(-n); else { history.replaceState(null, '', W.pending); W.pending = null; route(); }
+}
+
+function renderEntryView(e) {
+  const T = TYPES[e.type];
+  $('title').textContent = T.name;
+  let h = '<div class="card"><div class="small muted">' + T.name + ' · ' + dLong(e.created) + (e.done ? '' : ' · nicht abgeschlossen') + '</div>';
+  if (typeof e.data.s0 === 'number') h += '<div style="margin-top:6px">Stress <b>' + e.data.s0 + '</b>' + (typeof e.data.s1 === 'number' ? ' → <b>' + e.data.s1 + '</b>' : '') + ' von 10</div>';
+  if (e.review) h += '<div style="margin-top:6px"><span class="tag ' + (e.review.happened === 'nein' ? 'good' : e.review.happened === 'ja' ? 'bad' : 'warn') + '">' + HAP_TXT[e.review.happened] + '</span>' + (e.review.sev ? ' <span class="tag">' + SEV_TXT[e.review.sev] + '</span>' : '') + '<div class="small muted">geprüft am ' + dShort(e.review.at) + (e.review.note ? ': ' + esc(e.review.note) : '') + '</div></div>';
+  else if (e.reviewAt) h += '<div class="small muted" style="margin-top:6px">Rückblick am ' + dShort(e.reviewAt) + '</div>';
+  h += '</div>';
+  T.steps.forEach(st => {
+    const parts = [];
+    st.fields.forEach(f => {
+      if (f.k === 's0' || f.k === 's1') return;
+      const v = e.data[f.k];
+      if (f.t === 'list') {
+        (v || []).forEach((row, i) => {
+          const inner = f.sub.map(sf => { const t = fieldText(sf, row[sf.k]); return t ? '<div class="kv"><div class="k">' + esc(sf.label || '') + '</div><div class="v">' + esc(t) + '</div></div>' : ''; }).join('');
+          if (inner) parts.push('<div class="sub"><div class="head">' + (i + 1) + '.</div>' + inner + '</div>');
+        });
+      } else {
+        const t = fieldText(f, v);
+        if (t) parts.push('<div class="kv"><div class="k">' + esc(f.label || st.h) + '</div><div class="v">' + esc(t) + '</div></div>');
+      }
+    });
+    if (parts.length) h += '<div class="card"><h2>' + esc(st.h) + '</h2>' + parts.join('') + '</div>';
+  });
+  h += '<button class="block" id="v-edit">Bearbeiten</button>';
+  if (e.reviewAt && !e.review) h += '<button class="block" id="v-rev">Jetzt zurückblicken</button>';
+  if (e.review) h += '<button class="block ghost" id="v-rev">Rückblick ändern</button>';
+  view.innerHTML = h;
+  $('v-edit').onclick = () => { W.fromView = true; go('e/' + e.id + '/0'); };
+  if ($('v-rev')) $('v-rev').onclick = () => reviewDialog(e);
+}
+
+// ---------------------------------------------------------------- Fahrmodus
+// Liest jede Frage vor, hoert die Antwort und geht selbst weiter. Bedienung
+// ohne Hinsehen: "weiter"/"überspringen", "nochmal", "stopp".
+const D = { on: false, id: null, skipReq: false };
+const tick = () => new Promise(r => setTimeout(r, 30));
+function dShow(sel, txt) { $(sel).textContent = txt || ''; }
+function openDrive(stepTxt) { D.on = true; D.skipReq = false; $('drive').hidden = false; dShow('d-step', stepTxt); dShow('d-q', ''); dShow('d-state', ''); dShow('d-last', ''); }
+function stopDrive() { if (!D.on && $('drive').hidden) return; D.on = false; D.id = null; Voice.stop(); $('drive').hidden = true; }
+$('d-stop').onclick = stopDrive;
+$('d-skip').onclick = () => { D.skipReq = true; Voice.stop(); };
+async function say(text) { if (!D.on) return; dShow('d-state', '🔊 Ich lese vor …'); await Voice.speak(text); }
+// Eine Frage stellen. Liefert { text } oder { cmd: 'skip'|'stop' }.
+async function ask(q, prompt) {
+  let pre = '';
+  for (let tries = 0; tries < 4; tries++) {
+    if (!D.on) return { cmd: 'stop' };
+    dShow('d-q', q); await say(pre + q);
+    if (!D.on) return { cmd: 'stop' };
+    if (D.skipReq) { D.skipReq = false; return { cmd: 'skip' }; }
+    dShow('d-state', '🎤 Ich höre zu …');
+    const r = await Voice.listen(prompt || q);
+    if (!D.on) return { cmd: 'stop' };
+    if (D.skipReq) { D.skipReq = false; return { cmd: 'skip' }; }
+    if (r.kind === 'unavailable') { stopDrive(); toast('Spracheingabe ist auf diesem Gerät nicht verfügbar.'); return { cmd: 'stop' }; }
+    if (r.kind === 'heard') {
+      const c = voiceCmd(r.text);
+      if (c === 'repeat') { pre = ''; continue; }
+      if (c) return { cmd: c };
+      dShow('d-last', '„' + r.text + '“');
+      return { text: r.text };
+    }
+    if (tries >= 1) return { cmd: 'skip' };
+    pre = 'Ich habe nichts gehört. ';
+  }
+  return { cmd: 'skip' };
+}
+// Ein Feld per Sprache ausfuellen. Liefert 'stop', wenn der Fahrmodus enden soll.
+async function askField(e, f, path) {
+  const cur = getPath(e.data, path);
+  if (f.t === 'list') {
+    let rows = Array.isArray(cur) ? cur : []; if (!rows.length) { rows = [{}]; setPath(e.data, path, rows); }
+    let i = rows.findIndex(r => !f.sub.some(sf => hasValue(r[sf.k])));
+    if (i < 0) {
+      const r = await ask('Du hast schon ' + rows.length + ' eingetragen. ' + f.more + ' Ja oder nein?');
+      if (r.cmd === 'stop') return 'stop';
+      if (r.cmd || !parseYesNo(r.text)) return;
+      rows.push({}); i = rows.length - 1; save();
+    }
+    for (;;) {
+      if (rows.length > 1) await say('Nummer ' + (i + 1) + '.');
+      for (const sf of f.sub) if (await askField(e, sf, path + '.' + i + '.' + sf.k) === 'stop') return 'stop';
+      const r = await ask(f.more + ' Ja oder nein?');
+      if (r.cmd === 'stop') return 'stop';
+      if (r.cmd || !parseYesNo(r.text)) { const last = rows[rows.length - 1]; if (rows.length > 1 && !f.sub.some(sf => hasValue(last[sf.k]))) rows.pop(); save(); return; }
+      rows.push({}); i = rows.length - 1; save(); refreshWizard(e);
+    }
+  }
+  // Schon Ausgefuelltes nicht nochmal fragen; Stress vorher/nachher immer.
+  if (hasValue(cur) && !(f.fromS0 || f.fromKey || f.k === 's0')) return;
+  let opts = null, pickList = null;
+  if (f.t === 'pick') {
+    pickList = (e.data[f.from] || []).filter(it => it && (it[f.field] || '').trim() && (!f.filter || f.filter(it))).map(it => it[f.field].trim());
+    if (!pickList.length) return;
+    opts = pickList.map((t, i) => (i + 1) + ': ' + t);
+  }
+  let q = fieldQuestion(f, f.t === 'pick' ? opts : null);
+  if (f.t === 'pick') q = f.label + '. ' + opts.join('. ') + '. Sag die Nummer.';
+  for (let tries = 0; tries < 2; tries++) {
+    const r = await ask(q);
+    if (r.cmd === 'stop') return 'stop';
+    if (r.cmd) return;
+    let v, ok = true;
+    if (f.t === 'text' || f.t === 'area') v = appendText(cur, r.text);
+    else if (f.t === 'range') { v = parseNumber(r.text); ok = v !== null && v >= f.min && v <= f.max; if (ok) v = Math.round(v / f.step) * f.step; }
+    else if (f.t === 'check') { v = parseYesNo(r.text); ok = v !== null; }
+    else if (f.t === 'date') { v = parseDate(r.text, today()); ok = !!v; }
+    else if (f.t === 'chips') {
+      const hits = matchOptions(r.text, f.opts, f.vk, f.vorder);
+      if (f.multi) { v = hits.sort((a, b) => a - b).map(i => f.opts[i]); ok = hits.length > 0 || parseYesNo(r.text) === false; }
+      else { ok = hits.length > 0; v = ok ? (f.opts === ZONES ? hits[0] : f.opts[hits[0]]) : null; }
+    } else if (f.t === 'pick') {
+      const num = parseNumber(r.text.replace(/\b(erste|ersten)\b/i, '1').replace(/\b(zweite|zweiten)\b/i, '2').replace(/\b(dritte|dritten)\b/i, '3'));
+      let idx = num !== null && num >= 1 && num <= pickList.length ? num - 1 : pickList.findIndex(t => norm(r.text).indexOf(norm(t).trim()) >= 0);
+      ok = idx >= 0; v = ok ? pickList[idx] : null;
+    }
+    if (ok) { setPath(e.data, path, v); save(); refreshWizard(e); return; }
+    q = 'Das habe ich nicht verstanden. ' + fieldQuestion(f, f.t === 'pick' ? opts : null);
+    if (f.t === 'pick') q = 'Das habe ich nicht verstanden. Sag die Nummer: ' + opts.join('. ');
+  }
+}
+function refreshWizard(e) {
+  const parts = (location.hash || '').slice(1).split('/');
+  if (parts[0] === 'e' && parts[1] === e.id) { const y = window.scrollY; renderWizard(e, +parts[2] || 0); window.scrollTo(0, y); }
+}
+async function drive(e, n) {
+  const T = TYPES[e.type];
+  D.id = e.id; openDrive(T.name);
+  for (let i = n; i < T.steps.length; i++) {
+    if (!D.on) return;
+    if (i !== n) { go('e/' + e.id + '/' + i); await tick(); }
+    const st = T.steps[i];
+    dShow('d-step', T.name + ' · Schritt ' + (i + 1) + ' von ' + T.steps.length);
+    dShow('d-q', st.h);
+    await say(db.cfg.driveIntros && st.intro ? stepSpeech(st) : st.h + '.');
+    for (const f of st.fields) if (await askField(e, f, f.k) === 'stop') { stopDrive(); return; }
+  }
+  if (!D.on) return;
+  const d = e.data, msg = typeof d.s0 === 'number' && typeof d.s1 === 'number'
+    ? (d.s1 < d.s0 ? 'Dein Stress ist von ' + d.s0 + ' auf ' + d.s1 + ' gesunken.' : 'Dein Stress liegt bei ' + d.s1 + '.') : '';
+  dShow('d-q', 'Fertig.'); await say('Fertig. ' + msg + (d.next ? ' Dein nächster Schritt: ' + d.next + '.' : '') + ' Alles ist gespeichert.');
+  stopDrive(); finishWizard(e, T.steps.length - 1);
+}
+const HOME_VK = { note: ['notiz', 'notier', 'merk', 'später', 'aufschreiben'], tr: ['gedanke', 'runter', 'protokoll'], cc: ['zu viel', 'viel auf einmal', 'kontroll', 'alles'], fs: ['entscheid', 'wag', 'fear', 'änder', 'überleg', 'trau'], wf: ['sorge', 'angst', 'befürcht'] };
+async function driveHome() {
+  D.id = null; openDrive('Per Sprache');
+  const order = ['note', 'tr', 'cc', 'fs', 'wf'];
+  for (let tries = 0; tries < 2; tries++) {
+    const r = await ask(tries ? 'Sag einfach: Entscheidung, Sorge, Gedanke, zu viel, oder Notiz.' : 'Was beschäftigt dich? Eine Entscheidung, eine Sorge, ein Gedanke, der dich runterzieht, ist dir alles zu viel, oder willst du nur eine Notiz für später?');
+    if (r.cmd) { stopDrive(); return; }
+    const hit = order.find(k => HOME_VK[k].some(w => norm(r.text).indexOf(w) >= 0));
+    if (!hit) continue;
+    if (hit === 'note') {
+      const n = await ask('Was möchtest du notieren?');
+      if (n.text) { db.inbox.push({ id: uid(), text: appendText('', n.text), created: today() }); save(); await say('Notiert. Du siehst es zur Sorgenzeit wieder.'); }
+      stopDrive(); if ((location.hash || '#home') === '#home') render('home'); return;
+    }
+    const e = newEntry(hit); db.entries.push(e); save(); W.fromView = false;
+    D.id = e.id; go('e/' + e.id + '/0'); await tick();
+    return drive(e, 0);
+  }
+  await say('Ich habe dich nicht verstanden. Du kannst es gleich nochmal versuchen.'); stopDrive();
+}
+
+VIEWS.inbox = () => {
+  const open = db.inbox.filter(x => !x.done);
+  let h = '<div class="intro">Sorgenzeit heißt: Sorgen bekommen einen festen Termin. Den Rest des Tages notierst du sie nur kurz und schiebst sie bis dahin auf. Jetzt gehst du sie einzeln durch. Manches hat sich schon erledigt, manches braucht eine Übung.</div>' +
+    '<div class="row" style="margin-top:8px"><input type="text" class="grow" id="qn" maxlength="200" placeholder="Neue Notiz"><button id="qn-add">Ablegen</button></div>';
+  if (!open.length) h += '<div class="card muted">Keine offenen Notizen.</div>';
+  open.forEach(x => {
+    h += '<div class="card"><div>' + esc(x.text) + '</div><div class="small muted">' + dShort(x.created) + '</div>' +
+      '<div class="chips" style="margin-top:8px"><button class="chip" data-x="' + x.id + '" data-a="ok">Erledigt / unwichtig</button>' +
+      TYPE_KEYS.map(k => '<button class="chip" data-x="' + x.id + '" data-a="' + k + '">→ ' + TYPES[k].short + '</button>').join('') +
+      '<button class="chip" data-x="' + x.id + '" data-a="del">Löschen</button></div></div>';
+  });
+  const done = db.inbox.filter(x => x.done).length;
+  if (done) h += '<button class="block ghost small" id="clr">' + done + ' erledigte Notizen entfernen</button>';
+  view.innerHTML = h;
+  const add = () => { const t = $('qn').value.trim(); if (!t) return; db.inbox.push({ id: uid(), text: t, created: today() }); save(); render('inbox'); };
+  $('qn-add').onclick = add; $('qn').onkeydown = ev => { if (ev.key === 'Enter') add(); };
+  view.querySelectorAll('[data-x]').forEach(b => b.onclick = () => {
+    const x = db.inbox.find(i => i.id === b.dataset.x), a = b.dataset.a;
+    if (a === 'del') db.inbox = db.inbox.filter(i => i !== x);
+    else { x.done = today(); }
+    save();
+    if (TYPES[a]) startEntry(a, undefined, x.text); else render('inbox');
+  });
+  if ($('clr')) $('clr').onclick = () => { db.inbox = db.inbox.filter(x => !x.done); save(); render('inbox'); };
+};
+
+VIEWS.hist = () => {
+  const list = db.entries.filter(e => histFilter === 'all' || e.type === histFilter).sort((a, b) => a.created < b.created ? 1 : a.created > b.created ? -1 : 0);
+  let h = '<div class="chips"><button class="chip' + (histFilter === 'all' ? ' on' : '') + '" data-f="all">Alle</button>' + TYPE_KEYS.map(k => '<button class="chip' + (histFilter === k ? ' on' : '') + '" data-f="' + k + '">' + TYPES[k].short + '</button>').join('') + '</div>';
+  h += '<div class="card">' + (list.length ? list.map(e => {
+    const tag = e.review ? '<span class="tag ' + (e.review.happened === 'nein' ? 'good' : e.review.happened === 'ja' ? 'bad' : 'warn') + '">' + HAP_TXT[e.review.happened] + '</span>' : !e.done ? '<span class="tag warn">offen</span>' : '';
+    const st = typeof e.data.s0 === 'number' && typeof e.data.s1 === 'number' ? e.data.s0 + ' → ' + e.data.s1 : '';
+    return '<div class="item tap" data-id="' + e.id + '"><div class="grow"><div>' + esc(short(e.data.title || 'Ohne Titel', 70)) + '</div><div class="small muted">' + dShort(e.created) + ' · ' + TYPES[e.type].short + (st ? ' · Stress ' + st : '') + '</div></div>' + tag + '</div>';
+  }).join('') : '<div class="muted">Noch keine Einträge.</div>') + '</div>';
+  if (db.cfg.exportOn) h += '<button class="block primary" id="exp">An Claude senden</button>';
+  view.innerHTML = h;
+  view.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { histFilter = b.dataset.f; render('hist'); });
+  view.querySelectorAll('[data-id]').forEach(b => b.onclick = () => go('v/' + b.dataset.id));
+  if ($('exp')) $('exp').onclick = exportDialog;
+};
+
+VIEWS.stats = () => {
+  const q = quote(db.entries), sd = stressDelta(db.entries), done = db.entries.filter(e => e.done);
+  let h = '<div class="card"><h2>Eingetretene Befürchtungen</h2>';
+  if (!q.n) h += '<div class="muted">Noch nichts geprüft. Nach jeder Sorgen-Formel und jedem Fear Setting fragt die App nach ' + db.cfg.reviewDays + ' Tagen nach, wie es ausgegangen ist. Daraus entsteht hier deine eigene Quote.</div>';
+  else {
+    h += '<div class="big">' + q.ja + ' <span class="muted" style="font-size:16px;font-weight:400">von ' + q.n + ' eingetreten</span></div>' +
+      '<div class="meter"><i style="width:' + pct(q.nein, q.n) + '%;background:var(--good)"></i><i style="width:' + pct(q.teils, q.n) + '%;background:var(--warn)"></i><i style="width:' + pct(q.ja, q.n) + '%;background:var(--bad)"></i></div>' +
+      '<div class="small muted">' + q.nein + ' nicht · ' + q.teils + ' teilweise · ' + q.ja + ' eingetreten</div>';
+    if (q.milder + q.gleich + q.schlimmer) h += '<div style="margin-top:10px">Wenn etwas eintrat, war es <b>' + q.milder + '×</b> milder, <b>' + q.gleich + '×</b> so wie befürchtet und <b>' + q.schlimmer + '×</b> schlimmer.</div>';
+    if (q.est !== null) h += '<div style="margin-top:10px">Geschätzt hattest du im Schnitt <b>' + q.est + ' %</b>, eingetreten sind <b>' + q.real + ' %</b>' + (q.nEst < q.n ? ' (bei ' + q.nEst + ' Einträgen mit Schätzung)' : '') + '.' +
+      (q.est - q.real >= 15 ? ' Dein Kopf ist bisher deutlich pessimistischer als die Wirklichkeit.' : q.real - q.est >= 15 ? ' Deine Sorgen waren bisher eher berechtigt. Dann lohnt das Vorbeugen umso mehr.' : '') + '</div>';
+  }
+  h += '</div><div class="card"><h2>Stress vorher → nachher</h2>';
+  const ks = TYPE_KEYS.filter(k => sd[k]);
+  h += ks.length ? ks.map(k => '<div class="item"><div class="grow">' + TYPES[k].name + '<div class="small muted">' + sd[k].n + '× gemacht</div></div><b>' + fmtNum(sd[k].before) + ' → ' + fmtNum(sd[k].after) + '</b></div>').join('') : '<div class="muted">Noch keine abgeschlossene Übung.</div>';
+  h += '</div><div class="card"><h2>Insgesamt</h2><div>' + done.length + ' Übungen abgeschlossen · ' + openSteps(db.entries).length + ' Schritte offen · ' + db.entries.filter(e => e.stepDone).length + ' erledigt</div></div>';
+  view.innerHTML = h;
+};
+
+VIEWS.set = () => {
+  const c = db.cfg;
+  view.innerHTML = '<div class="card"><h2>Rückblick</h2><div class="small muted">Nach wie vielen Tagen fragt die App, ob eine Befürchtung eingetreten ist?</div><div class="chips" style="margin-top:8px">' +
+    [3, 7, 14, 30, 60].map(n => '<button class="chip' + (c.reviewDays === n ? ' on' : '') + '" data-rd="' + n + '">' + n + ' Tage</button>').join('') + '</div><div class="small muted" style="margin-top:6px">Gilt für neue Einträge.</div></div>' +
+    '<div class="card"><h2>Sorgenzeit</h2><div class="small muted">Ab dieser Uhrzeit hebt die Startseite deine Notizen hervor. Erinnerungen per Benachrichtigung gibt es nicht.</div><input type="time" id="wt" value="' + esc(c.worryTime || '') + '" style="margin-top:8px"></div>' +
+    '<div class="card"><h2>Sprache</h2><label class="c" style="margin-top:0"><input type="checkbox" id="dr-in"' + (c.driveIntros ? ' checked' : '') + '><span>Im Fahrmodus die Erklärungen zu jedem Schritt vorlesen</span></label><div class="small muted" style="margin-top:6px">' + (Voice.canListen() ? 'Spracheingabe nutzt den Sprachdienst des Handys (Google). Der braucht meist Internet, außer die Sprache Deutsch ist dort offline geladen.' : 'Auf diesem Gerät ist keine Spracheingabe verfügbar.') + '</div></div>' +
+    '<div class="card"><h2>Export für den Health-OS-Chat</h2><label class="c" style="margin-top:0"><input type="checkbox" id="ex-on"' + (c.exportOn ? ' checked' : '') + '><span>„An Claude senden“ anzeigen</span></label>' +
+    '<div class="small muted" style="margin-top:6px">Standardmäßig aus. Wenn an, erscheint auf der Startseite und im Verlauf ein Knopf, der einen kurzen STRESS-Text zum Kopieren erzeugt: Übung, Stress vorher/nachher, Rückblicke. Was du geschrieben hast, kommt nur mit, wenn du es beim Export ausdrücklich ankreuzt.</div></div>' +
+    '<div class="card"><h2>Daten</h2><div class="small muted">Alles liegt nur auf diesem Handy. Beim Deinstallieren ist es weg, also ab und zu sichern.</div><button class="block" id="bk">Sichern oder einspielen</button><button class="block ghost danger" id="wipe">Alles löschen</button></div>';
+  view.querySelectorAll('[data-rd]').forEach(b => b.onclick = () => { c.reviewDays = +b.dataset.rd; save(); render('set'); });
+  $('wt').onchange = ev => { c.worryTime = ev.target.value; save(); };
+  $('ex-on').onchange = ev => { c.exportOn = ev.target.checked; save(); };
+  $('dr-in').onchange = ev => { c.driveIntros = ev.target.checked; save(); };
+  $('bk').onclick = backupDialog;
+  $('wipe').onclick = () => confirmDialog('Alles löschen?', 'Alle Einträge, Notizen und Einstellungen. Das lässt sich nicht rückgängig machen, außer mit einer Sicherung.', 'Alles löschen', () => {
+    const f = freshDb(); Object.keys(db).forEach(k => delete db[k]); Object.assign(db, f); save(); closeModal(); location.replace('#home');
+  });
+};
+
+VIEWS.info = () => {
+  const sec = (t, body) => '<div class="card"><h2>' + t + '</h2><div class="small">' + body + '</div></div>';
+  view.innerHTML =
+    sec('Wofür die App da ist', 'Sorgen werden kleiner, wenn man sie aufschreibt, prüft und in einen Schritt verwandelt. Die App führt dich dabei durch vier bewährte Übungen und merkt sich, wie es ausgegangen ist. Mit der Zeit siehst du an deinen eigenen Zahlen, wie oft das Befürchtete wirklich eintritt.') +
+    sec('Fear Setting', 'Von Tim Ferriss, der dazu einen TED-Talk gehalten hat („Why you should define your fears instead of your goals“, 2017). Für Entscheidungen, die man aus Angst aufschiebt: Befürchtungen definieren, vorbeugen, reparieren. Dann den Nutzen eines Versuchs gegen die Kosten des Nichtstuns stellen.') +
+    sec('Sorgen-Formel und Carnegies Werkzeuge', 'Aus Dale Carnegies Buch „Sorge dich nicht – lebe!“ (Original 1948). Die Formel geht auf Willis Carrier zurück: schlimmsten Fall bestimmen, annehmen, verbessern. Dazu kommen Carnegies Grundgedanken: erst die Fakten, die Wahrscheinlichkeit prüfen, einer Sorge eine Obergrenze setzen, in Tagesabschnitten leben und Vergangenes ruhen lassen. Alle Texte in der App sind eigene Zusammenfassungen.') +
+    sec('Kontrollkreis', 'Aus der Stoa (Epiktet, Mark Aurel): trennen, was in deiner Hand liegt und was nicht. Handeln, wo du kannst, und loslassen, wo du nicht kannst.') +
+    sec('Gedankenprotokoll', 'Ein Werkzeug der kognitiven Verhaltenstherapie (nach Aaron Beck). Einen belastenden Gedanken aufschreiben, Belege dafür und dagegen sammeln, Denkfallen erkennen und einen ausgewogeneren Gedanken finden.') +
+    sec('Sorgenzeit', 'Aus der Forschung zu Grübeln und Sorgen (Borkovec und Kollegen): Sorgen tagsüber nur notieren und zu einem festen Zeitpunkt gesammelt ansehen. Viele haben sich bis dahin von selbst erledigt.') +
+    sec('Rückblick', 'Bei Sorgen-Formel und Fear Setting fragt die App nach einer Weile, ob es eingetreten ist und wie schlimm es war. Diese eigene Statistik ist oft überzeugender als jedes Argument.') +
+    sec('Sprache und Fahrmodus', 'Neben jedem Textfeld diktierst du mit 🎤. „Vorlesen“ liest den Schritt vor. Der Fahrmodus macht die ganze Übung per Sprache: Er liest jede Frage vor, hört deine Antwort und geht selbst weiter. Zahlen sagst du einfach („sieben“, „siebzig Prozent“), Termine als „morgen“, „Freitag“ oder „in drei Tagen“. Jederzeit möglich: „weiter“ oder „überspringen“, „nochmal“ und „stopp“. Starte ihn vor der Abfahrt, damit du unterwegs nichts antippen musst.') +
+    sec('Grenzen', 'Die App ist ein Selbsthilfe-Werkzeug und ersetzt keine Therapie. Wenn Sorgen oder Ängste dich über Wochen stark einschränken, sprich mit deiner Hausärztin, deinem Hausarzt oder einer Psychotherapeutin. In einer akuten Krise: Telefonseelsorge 0800 111 0 111 oder 0800 111 0 222 (kostenlos, rund um die Uhr), im Notfall 112.') +
+    '<div class="foot">Sorgenkompass v' + VERSION + ' · alle Daten nur auf diesem Gerät</div>';
+};
+
+// ---------------------------------------------------------------- Dialoge
+function openModal(html, init) { $('modal-in').innerHTML = html; $('modal').hidden = false; init && init($('modal-in')); }
+function closeModal() { $('modal').hidden = true; }
+$('modal').onclick = ev => { if (ev.target === $('modal')) closeModal(); };
+let toastT = 0;
+function toast(msg) {
+  let t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.style.cssText = 'position:fixed;left:50%;bottom:calc(var(--sab) + 24px);transform:translateX(-50%);z-index:30;background:#26303D;border:1px solid var(--line);border-radius:12px;padding:10px 14px;max-width:90%;font-size:14px;text-align:center'; document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3000);
+}
+function confirmDialog(title, text, yes, onYes) {
+  openModal('<h3>' + esc(title) + '</h3><div class="muted small">' + esc(text) + '</div><div class="btns"><button class="ghost" id="q-no">Abbrechen</button><button class="danger" id="q-yes">' + esc(yes) + '</button></div>', () => {
+    $('q-no').onclick = closeModal; $('q-yes').onclick = onYes;
+  });
+}
+function reviewDialog(e) {
+  const r = Object.assign({}, e.review || {});
+  const chips = (k, opts) => '<div class="chips" style="margin-top:6px">' + Object.keys(opts).map(o => '<button class="chip' + (r[k] === o ? ' on' : '') + '" data-rk="' + k + '" data-rv="' + o + '">' + opts[o] + '</button>').join('') + '</div>';
+  openModal('<h3>Wie ist es ausgegangen?</h3><div class="small muted">' + TYPES[e.type].short + ' vom ' + dShort(e.created) + '</div><div style="margin:8px 0;white-space:pre-wrap">' + esc(short(e.data.title || '', 300)) + '</div>' +
+    (typeof e.data.prob === 'number' ? '<div class="small muted">Damals geschätzt: ' + e.data.prob + ' % Wahrscheinlichkeit</div>' : '') +
+    '<label class="f">Ist das Befürchtete eingetreten?</label>' + chips('happened', { nein: 'Nein', teils: 'Teilweise', ja: 'Ja' }) +
+    '<div id="r-sev"' + (r.happened && r.happened !== 'nein' ? '' : ' hidden') + '><label class="f">Wie schlimm war es?</label>' + chips('sev', { milder: 'Milder als befürchtet', gleich: 'Wie befürchtet', schlimmer: 'Schlimmer' }) + '</div>' +
+    '<label class="f">Notiz (freiwillig)</label><input type="text" id="r-note" maxlength="200" value="' + esc(r.note || '') + '">' +
+    '<div id="r-msg" class="small bad"></div><div class="btns">' + (e.review ? '' : '<button class="ghost" id="r-later">In 7 Tagen</button>') + '<button class="primary" id="r-ok">Speichern</button></div>', root => {
+    root.querySelectorAll('[data-rk]').forEach(b => b.onclick = () => {
+      const k = b.dataset.rk; r[k] = b.dataset.rv;
+      root.querySelectorAll('[data-rk="' + k + '"]').forEach(c => c.classList.toggle('on', c === b));
+      if (k === 'happened') { $('r-sev').hidden = r.happened === 'nein'; if (r.happened === 'nein') delete r.sev; }
+    });
+    if ($('r-later')) $('r-later').onclick = () => { e.reviewAt = addDays(today(), 7); save(); closeModal(); route(); };
+    $('r-ok').onclick = () => {
+      if (!r.happened) { $('r-msg').textContent = 'Bitte wähle Nein, Teilweise oder Ja.'; return; }
+      r.note = $('r-note').value.trim(); if (!r.note) delete r.note;
+      r.at = (e.review && e.review.at) || today(); e.review = r; save(); closeModal(); route();
+    };
+  });
+}
+function copyText(id, msg) {
+  const ta = $(id); ta.select(); let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  if (!ok && navigator.clipboard) navigator.clipboard.writeText(ta.value).then(() => { $(msg).textContent = 'Kopiert ✓'; }, () => {});
+  $(msg).textContent = ok ? 'Kopiert ✓ Jetzt im Health-OS-Chat einfügen.' : 'Bitte von Hand markieren und kopieren.';
+}
+function exportDialog() {
+  let range = 'today';
+  const make = () => { const t = today(), from = range === 'today' ? t : addDays(t, -6); return exportText(db, from, t, db.cfg.exportTitles); };
+  openModal('<h3>An Claude senden</h3><div class="chips"><button class="chip on" data-r="today">Heute</button><button class="chip" data-r="week">Letzte 7 Tage</button></div>' +
+    '<label class="c"><input type="checkbox" id="x-t"' + (db.cfg.exportTitles ? ' checked' : '') + '><span>Stichworte (Titel) mitschicken</span></label>' +
+    '<textarea class="mono" id="x-text" style="margin-top:10px" readonly></textarea><div id="x-msg" class="small good"></div>' +
+    '<div class="btns"><button class="ghost" id="x-close">Schließen</button><button class="primary" id="x-copy">Kopieren</button></div>', root => {
+    const upd = () => { $('x-text').value = make(); $('x-msg').textContent = ''; };
+    root.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { range = b.dataset.r; root.querySelectorAll('[data-r]').forEach(c => c.classList.toggle('on', c === b)); upd(); });
+    $('x-t').onchange = ev => { db.cfg.exportTitles = ev.target.checked; save(); upd(); };
+    $('x-close').onclick = closeModal; $('x-copy').onclick = () => copyText('x-text', 'x-msg');
+    upd();
+  });
+}
+function backupDialog() {
+  const text = JSON.stringify({ app: 'sorgenkompass', version: 1, saved: today(), data: db });
+  openModal('<h3>Sichern oder einspielen</h3><div class="small muted">Kopiere den Text und bewahre ihn an einem sicheren Ort auf. Er enthält alles, was du geschrieben hast. Zum Einspielen eine Sicherung einfügen; sie ersetzt alle Daten.</div>' +
+    '<textarea class="mono" id="b-text" style="margin-top:8px">' + esc(text) + '</textarea><div id="b-msg" class="small"></div>' +
+    '<div class="btns"><button class="ghost" id="b-x">Schließen</button><button id="b-copy">Kopieren</button><button id="b-in">Einspielen</button></div>', () => {
+    $('b-x').onclick = closeModal;
+    $('b-copy').onclick = () => copyText('b-text', 'b-msg');
+    $('b-in').onclick = () => {
+      try { const d = parseBackup($('b-text').value); Object.keys(db).forEach(k => delete db[k]); Object.assign(db, d); save(); closeModal(); location.replace('#home'); route(); }
+      catch (e) { $('b-msg').innerHTML = '<span class="bad">Das ist keine Sicherung dieser App.</span>'; }
+    };
+  });
+}
+
+// ---------------------------------------------------------------- Navigation
+function go(h) { location.hash = '#' + h; }
+function render(name) {
+  if (!VIEWS[name]) name = 'home';
+  $('title').textContent = TITLES[name]; $('back').style.visibility = name === 'home' ? 'hidden' : 'visible';
+  VIEWS[name](); window.scrollTo(0, 0);
+}
+function route() {
+  if (W.pending) { const p = W.pending; W.pending = null; history.replaceState(null, '', p); }
+  closeModal();
+  const parts = (location.hash || '#home').slice(1).split('/');
+  if (D.on && D.id && !(parts[0] === 'e' && parts[1] === D.id)) stopDrive();
+  if (parts[0] === 'e' || parts[0] === 'v') {
+    const e = entry(parts[1]);
+    if (!e) { history.replaceState(null, '', '#home'); render('home'); return; }
+    $('back').style.visibility = 'visible';
+    if (parts[0] === 'v') renderEntryView(e);
+    else renderWizard(e, Math.max(0, Math.min(TYPES[e.type].steps.length - 1, +parts[2] || 0)));
+    window.scrollTo(0, 0); return;
+  }
+  render(parts[0] || 'home');
+}
+$('back').onclick = () => history.back();
+window.addEventListener('hashchange', route);
+
+// ---------------------------------------------------------------- Selbsttest
+function skTests() {
+  let ok = 0, fail = 0;
+  const t = (name, cond, info) => { if (cond) { ok++; console.log('OK   ' + name); } else { fail++; console.error('FAIL ' + name + (info !== undefined ? ' -> ' + info : '')); } };
+  const keys = T => [].concat.apply([], T.steps.map(s => s.fields.map(f => f.k)));
+  t('Übungen: jede Schrittliste mit Titel, eindeutige Feldschlüssel, Stress vorher und nachher', TYPE_KEYS.every(k => { const ks = keys(TYPES[k]); return TYPES[k].steps.every(s => s.h && s.fields.length) && new Set(ks).size === ks.length && ks.indexOf('s0') >= 0 && ks.indexOf('s1') >= 0 && ks.indexOf('title') >= 0; }));
+  t('Rückblick nur bei Fear Setting und Sorgen-Formel, beide mit Schätzung', TYPE_KEYS.filter(k => TYPES[k].review).join() === 'fs,wf' && keys(TYPES.fs).indexOf('prob') >= 0 && keys(TYPES.wf).indexOf('prob') >= 0);
+  const e1 = newEntry('wf', 7, 'Prüfung', '2026-11-01');
+  t('newEntry: Startwerte', e1.type === 'wf' && e1.data.s0 === 7 && e1.data.title === 'Prüfung' && !e1.done && e1.created === '2026-11-01' && newEntry('cc').data.s0 === undefined);
+  finishEntry(e1, 14, '2026-11-02');
+  const e2 = finishEntry(newEntry('cc', 5, 'x', '2026-11-01'), 14, '2026-11-01');
+  t('finishEntry: Rückblick-Termin nur wo vorgesehen', e1.done && e1.reviewAt === '2026-11-16' && e1.finished === '2026-11-02' && e2.done && !e2.reviewAt);
+  t('addDays über Monatsgrenze', addDays('2026-11-25', 14) === '2026-12-09' && addDays('2026-03-01', -1) === '2026-02-28');
+  const e3 = finishEntry(newEntry('fs', 6, 'Kündigen', '2026-11-03'), 7, '2026-11-03'), e4 = newEntry('wf', 4, 'offen', '2026-11-03');
+  t('dueReviews: fällig, sortiert, ohne offene und geprüfte', dueReviews([e1, e2, e3, e4], '2026-11-16').map(e => e.id).join() === [e3.id, e1.id].join() && dueReviews([e1, e3], '2026-11-10').length === 1 && dueReviews([e1, e3], '2026-11-09').length === 0 && dueReviews([e1], '2026-11-15').length === 0);
+  e1.data.prob = 60; e1.review = { happened: 'nein', at: '2026-11-16' };
+  e3.data.prob = 80; e3.review = { happened: 'teils', sev: 'milder', at: '2026-11-10' };
+  const e5 = finishEntry(newEntry('wf', 8, 'y', '2026-11-01'), 7, '2026-11-01'); e5.review = { happened: 'ja', sev: 'schlimmer', at: '2026-11-08' };
+  const q = quote([e1, e2, e3, e4, e5]);
+  t('quote: Zählung und Kalibrierung', q.n === 3 && q.nein === 1 && q.teils === 1 && q.ja === 1 && q.milder === 1 && q.schlimmer === 1 && q.nEst === 2 && q.est === 70 && q.real === 25, JSON.stringify(q));
+  t('quote: leer', quote([]).n === 0 && quote([]).est === null);
+  e1.data.s1 = 3; e5.data.s1 = 6; e2.data.s1 = 2;
+  const sd = stressDelta([e1, e2, e3, e4, e5]);
+  t('stressDelta: Mittelwerte je Übung, nur vollständige', sd.wf.n === 2 && sd.wf.before === 7.5 && sd.wf.after === 4.5 && sd.cc.n === 1 && !sd.fs && !sd.tr);
+  e1.data.next = 'Anrufen'; e1.data.nextDate = '2026-11-20'; e2.data.next = 'Liste'; e3.data.next = 'Mail'; e3.data.nextDate = '2026-11-05'; e3.stepDone = '2026-11-06';
+  t('openSteps: offen, nach Datum, ohne Datum zuletzt', openSteps([e1, e2, e3, e4]).map(e => e.id).join() === [e1.id, e2.id].join());
+  t('Sorgenzeit', isWorryTime('18:00', '18:00') && isWorryTime('21:30', '18:00') && !isWorryTime('09:15', '18:00') && !isWorryTime('20:00', ''));
+  const d = { cfg: {}, entries: [e1, e2, e3, e4, e5], inbox: [{ id: 'a', text: 'Steuer', created: '2026-11-02' }, { id: 'b', text: 'x', done: '2026-11-02' }] };
+  const x1 = exportText(d, '2026-11-02', '2026-11-02', false);
+  t('exportText: Tag, ohne Freitext', x1.indexOf('STRESS 02.11.2026') === 0 && x1.indexOf('Übungen: 1') > 0 && x1.indexOf('- Sorgen-Formel: Stress 7 → 3, geschätzt 60 %') > 0 && x1.indexOf('Prüfung') < 0 && x1.indexOf('Bisher eingetreten: 1 von 3 Befürchtungen, 1 teilweise') > 0 && x1.indexOf('Sorgenzeit: 1 Notizen offen') > 0, x1);
+  const x2 = exportText(d, '2026-11-01', '2026-11-16', true);
+  t('exportText: Zeitraum mit Titeln und Rückblick', x2.indexOf('STRESS 01.11.2026 bis 16.11.2026') === 0 && x2.indexOf('„Prüfung“') > 0 && x2.indexOf('- 03.11. Fear Setting „Kündigen“') > 0 && x2.indexOf('Rückblick: 3 geprüft (1× nicht eingetreten, 1× teilweise eingetreten, 1× eingetreten)') > 0, x2);
+  t('exportText: leerer Tag', exportText({ entries: [], inbox: [] }, '2026-11-02', '2026-11-02').split('\n').join('|') === 'STRESS 02.11.2026|Übungen: keine');
+  const bk = JSON.stringify({ app: 'sorgenkompass', version: 1, data: { cfg: { reviewDays: 7 }, entries: [e1, { id: 'z', type: 'nope' }], inbox: [] } });
+  let pb = null; try { pb = parseBackup(bk); } catch (e) {}
+  let bad = 0; ['{"app":"routinen-coach","data":{"entries":[]}}', 'kein json', '{}'].forEach(s => { try { parseBackup(s); } catch (e) { bad++; } });
+  t('parseBackup: gültig, unbekannte Typen fallen weg, Vorgaben ergänzt, Fremdes abgelehnt', pb && pb.entries.length === 1 && pb.cfg.reviewDays === 7 && pb.cfg.exportOn === false && bad === 3);
+  t('Export standardmäßig aus', freshDb().cfg.exportOn === false && DEFAULT_CFG.exportOn === false);
+  const o = {}; setPath(o, 'fears.1.fear', 'a'); setPath(o, 'x', 1);
+  t('setPath/getPath: Listen entstehen', Array.isArray(o.fears) && o.fears[1].fear === 'a' && getPath(o, 'fears.1.fear') === 'a' && getPath(o, 'fears.5.fear') === undefined && o.x === 1);
+  t('esc und short', esc('<a href="x">&') === '&lt;a href=&quot;x&quot;&gt;&amp;' && short('  a   b ', 10) === 'a b' && short('abcdefghij', 5) === 'abcd…');
+  t('fieldText', fieldText({ t: 'range', unit: ' %' }, 40) === '40 %' && fieldText({ t: 'chips', opts: ZONES }, 2) === 'Nicht beeinflussbar' && fieldText({ t: 'chips', multi: true }, ['a', 'b']) === 'a, b' && fieldText({ t: 'area' }, '') === '' && fieldText({ t: 'check' }, true) === '✓');
+  t('Sprachbefehle nur als ganze Antwort', voiceCmd('Weiter.') === 'skip' && voiceCmd('Stopp!') === 'stop' && voiceCmd('noch mal') === 'repeat' && voiceCmd('ich will weiter machen') === null && voiceCmd('') === null);
+  t('Ja/Nein', parseYesNo('Ja, genau') === true && parseYesNo('nein danke') === false && parseYesNo('eher nicht') === false && parseYesNo('vielleicht') === null && parseYesNo('Okay') === true);
+  t('Zahlen gesprochen', parseNumber('7') === 7 && parseNumber('siebzig Prozent') === 70 && parseNumber('fünfundsiebzig') === 75 && parseNumber('so ungefähr drei') === 3 && parseNumber('eine Sieben') === 7 && parseNumber('eine') === 1 && parseNumber('fifty fifty') === 50 && parseNumber('keine Ahnung') === null && parseNumber('30 %') === 30 && parseNumber('einundzwanzig') === 21 && parseNumber('hundert') === 100);
+  t('Termine gesprochen (25.11.2026 ist ein Mittwoch)', parseDate('morgen', '2026-11-25') === '2026-11-26' && parseDate('Übermorgen', '2026-11-25') === '2026-11-27' && parseDate('bis heute Abend', '2026-11-25') === '2026-11-25' && parseDate('Freitag', '2026-11-25') === '2026-11-27' && parseDate('am Mittwoch', '2026-11-25') === '2026-12-02' && parseDate('in drei Tagen', '2026-11-25') === '2026-11-28' && parseDate('in 2 Wochen', '2026-11-25') === '2026-12-09' && parseDate('irgendwann', '2026-11-25') === null);
+  const zf = TYPES.cc.steps[1].fields[0].sub[1];
+  t('Optionen erkennen: Bereiche, Entscheidung, Denkfallen', matchOptions('liegt nicht bei mir', ZONES, zf.vk, zf.vorder)[0] === 2 && matchOptions('teilweise', ZONES, zf.vk, zf.vorder)[0] === 1 && matchOptions('das liegt bei mir', ZONES, zf.vk, zf.vorder)[0] === 0 &&
+    matchOptions('ich teste es erstmal', TYPES.fs.steps[4].fields[0].opts, TYPES.fs.steps[4].fields[0].vk, TYPES.fs.steps[4].fields[0].vorder)[0] === 1 &&
+    matchOptions('Katastrophisieren und Schwarz-Weiß', DISTORT.map(d => d[1]), DISTORT_VK).join() === '0,1' && matchOptions('blabla', ZONES, zf.vk, zf.vorder).length === 0);
+  t('Diktat anhängen', appendText('', 'hallo welt') === 'Hallo welt' && appendText('A.', 'b') === 'A. b' && appendText('A', 'b') === 'A, b' && appendText('A', ' ') === 'A');
+  t('Listenfelder haben eine Rückfrage für den Fahrmodus', TYPE_KEYS.every(k => TYPES[k].steps.every(st => st.fields.every(f => f.t !== 'list' || f.more))));
+  console.log('Selbsttest: ' + ok + ' OK, ' + fail + ' Fehler');
+  return { ok, fail };
+}
+window.skTests = skTests;
+// Fahrmodus einmal komplett mit simulierten Antworten (nur im Browser-Test aufrufen,
+// legt einen echten Eintrag an).
+window.skDriveTest = async function () {
+  window.SK_SPOKEN = [];
+  window.SK_FAKE_VOICE = ['Ich mache mir Sorgen', 'Die Präsentation morgen', 'acht', 'Ich bin gut vorbereitet', 'dass alle mich auslachen', 'zwanzig Prozent',
+    'es läuft schlecht', 'ja', 'weiter', 'nochmal üben', 'ich halte sie', 'nein', 'überspringen', 'Folien durchgehen', 'heute abend einmal laut üben', 'morgen', '4'];
+  const before = db.entries.length;
+  await driveHome();
+  await new Promise(r => setTimeout(r, 300));
+  const e = db.entries[db.entries.length - 1], d = e.data;
+  const res = { added: db.entries.length - before, type: e.type, done: e.done, title: d.title, s0: d.s0, s1: d.s1, prob: d.prob, accept: d.accept, acceptText: d.acceptText, past: d.past, stop: d.stop,
+    todayPart: d.todayPart, next: d.next, nextDate: d.nextDate, left: window.SK_FAKE_VOICE.length, hash: location.hash, driveHidden: $('drive').hidden, spoken: window.SK_SPOKEN.length };
+  res.ok = res.added === 1 && e.type === 'wf' && e.done && d.title === 'Die Präsentation morgen' && d.s0 === 8 && d.s1 === 4 && d.prob === 20 && d.accept === true && d.acceptText === undefined &&
+    d.past === false && d.stop === undefined && d.todayPart === 'Folien durchgehen' && d.next === 'Heute abend einmal laut üben' && d.nextDate === addDays(today(), 1) && res.left === 0 && res.driveHidden && location.hash === '#v/' + e.id;
+  delete window.SK_FAKE_VOICE;
+  return res;
+};
+if (/[?&]debug=1/.test(location.search)) {
+  const r = skTests(); window.SK_TEST = r;
+  const div = document.createElement('div'); div.className = 'card small ' + (r.fail ? 'bad' : 'good'); div.id = 'selftest';
+  div.textContent = 'Selbsttest: ' + r.ok + ' OK, ' + r.fail + ' Fehler';
+  setTimeout(() => view.prepend(div), 0);
+}
+route();
+</script>
+</body>
+</html>
